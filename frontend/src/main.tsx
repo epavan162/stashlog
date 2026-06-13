@@ -9,4 +9,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
-// Trigger deploy: package-lock resolution and styling build
+// Trigger deploy

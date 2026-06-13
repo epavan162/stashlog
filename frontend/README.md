@@ -1,73 +1,79 @@
-# React + TypeScript + Vite
+# Stashlog — Frontend Client 💻
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the React Single Page Application (SPA) client for Stashlog, built with React 19, Vite, TypeScript, Tailwind CSS, Zustand, and TanStack React Query.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 📦 Installed Libraries & Dependencies
 
-## React Compiler
+*   **Vite**: Fast development build server and asset bundler.
+*   **TypeScript**: Static typing for robustness and interface contracts.
+*   **Tailwind CSS**: Utility-first CSS framework coupled with custom theme tokens.
+*   **Framer Motion**: Smooth micro-interactions, page transitions, and dashboard modal load animations.
+*   **Lucide React**: Vector SVG icon sets.
+*   **Zustand**: Clean, lightweight global client state management (stores for Auth credentials and Theme selection).
+*   **TanStack React Query**: Server state synchronizer, query caching, and auto-refetching.
+*   **Axios**: HTTP client configured with automatic 401 token refresh interceptors.
+*   **Date-fns**: Date parsing, calculations, and local timezone formats.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🎨 Design System & Custom Styling
+The application styling is declared in `src/index.css` using theme variables and custom Tailwind tokens:
+*   **Light Mode background**: `#f4f1ec` (terracotta cream)
+*   **Dark Mode background**: `#0a0910` (deep dark violet-black)
+*   **Accent Color**: `#c2533c` (terracotta copper)
+*   **Typography**: *Inter Tight* (headers), *Instrument Serif* (landing headings), and *JetBrains Mono* (dates and data).
+*   **Accessibility**: Buttons under 44px (such as the standard `sm` buttons) use absolute pseudo-elements (`after:`) to expand their vertical touch target to exactly 44px, satisfying mobile usability criteria.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 📂 Navigation & Routing
+Defined in `App.tsx` and managed by React Router:
+*   `/` → `Landing.tsx` (Interactive landing screen with feature highlights)
+*   `/login` → `Login.tsx` (Email login + Google OAuth login)
+*   `/register` → `Register.tsx` (Sign up form with validator patterns)
+*   `/verify-email` → `VerifyEmail.tsx` (Landing page for email token activation)
+*   `/set-password` → `SetPassword.tsx` (Google-only sign-up redirect to set password)
+*   `/dashboard` → `Dashboard.tsx` (Main workspace for log entries, streak progress, and AI summaries)
+*   `/history` → `History.tsx` (Monthly log calendar with tag indicators and modal lists)
+*   `/settings` → `Settings.tsx` (Preferences, active sessions manager, and delete account)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## ⚙️ Local Environment Variables
+Create a `frontend/.env` file in this directory:
+```env
+VITE_API_URL=http://localhost:8080
+VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🛠️ CLI Build Commands
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+1.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+2.  **Start development server**:
+    ```bash
+    npm run dev
+    ```
+3.  **Compile production bundle**:
+    ```bash
+    npm run build
+    ```
+    *Build outputs will compile into the `dist/` directory.*
+
+---
+
+## 🚀 Vercel Production Settings
+
+1.  Create a project on Vercel importing this repository.
+2.  **Root Directory**: Set this to **`frontend`**.
+3.  **Framework Preset**: Select **`Vite`**.
+4.  **Environment Variables**:
+    *   `VITE_API_URL` = Production Go API URL (e.g. `https://stashlog-api.onrender.com`)
+    *   `VITE_GOOGLE_CLIENT_ID` = Google Client ID.
+5.  **SPA Router Redirects**: A `vercel.json` file in this directory routes all path queries (like `/dashboard` and `/history`) back to `index.html` to prevent 404 page reload errors in production.

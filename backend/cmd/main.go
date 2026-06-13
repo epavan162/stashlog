@@ -53,3 +53,5 @@ func main() {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
+
+// Trigger deploy: production migration alignment

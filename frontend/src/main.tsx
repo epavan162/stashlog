@@ -9,4 +9,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
-// Trigger deploy: latest Vercel CLI upgrade
+// Trigger deploy: fix vercel run directory path

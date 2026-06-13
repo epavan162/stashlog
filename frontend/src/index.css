@@ -1,0 +1,255 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== Theme Variables ===== */
+:root,
+.light {
+  --bg: #f4f1ec;
+  --bg-elev: #ebe6dd;
+  --bg-card: #ffffff;
+  --line: rgba(28, 24, 20, 0.08);
+  --line-strong: rgba(28, 24, 20, 0.18);
+  --fg: #1a1814;
+  --fg-dim: rgba(26, 24, 20, 0.72);
+  --fg-faint: rgba(26, 24, 20, 0.45);
+  --accent: #c2533c;
+  --accent-amber: #b8760f;
+  --accent-purple: #5a3d6e;
+  --accent-teal: #1a8a96;
+  --accent-pink: #d4466a;
+  --accent-emerald: #3d7a5f;
+  --success: #16a34a;
+  --warning: #d97706;
+  --error: #dc2626;
+
+  /* Tag Variables */
+  --tag-bug-bg: rgba(220, 38, 38, 0.08);
+  --tag-bug-border: rgba(220, 38, 38, 0.18);
+  --tag-feature-bg: rgba(26, 138, 150, 0.08);
+  --tag-feature-border: rgba(26, 138, 150, 0.18);
+  --tag-review-bg: rgba(90, 61, 110, 0.08);
+  --tag-review-border: rgba(90, 61, 110, 0.18);
+  --tag-blocked-bg: rgba(184, 118, 15, 0.08);
+  --tag-blocked-border: rgba(184, 118, 15, 0.18);
+  --tag-learning-bg: rgba(61, 122, 95, 0.08);
+  --tag-learning-border: rgba(61, 122, 95, 0.18);
+}
+
+.dark {
+  --bg: #0a0910;
+  --bg-elev: #14131a;
+  --bg-card: #1e1d28;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --fg: #f0ece4;
+  --fg-dim: rgba(240, 236, 228, 0.75);
+  --fg-faint: rgba(240, 236, 228, 0.45);
+  --accent: #e25c3e;
+  --accent-amber: #fbbf24;
+  --accent-purple: #c084fc;
+  --accent-teal: #2dd4bf;
+  --accent-pink: #f472b6;
+  --accent-emerald: #34d399;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --error: #f87171;
+
+  /* Tag Variables */
+  --tag-bug-bg: rgba(248, 113, 113, 0.12);
+  --tag-bug-border: rgba(248, 113, 113, 0.25);
+  --tag-feature-bg: rgba(45, 212, 191, 0.12);
+  --tag-feature-border: rgba(45, 212, 191, 0.25);
+  --tag-review-bg: rgba(192, 132, 252, 0.12);
+  --tag-review-border: rgba(192, 132, 252, 0.25);
+  --tag-blocked-bg: rgba(251, 191, 36, 0.12);
+  --tag-blocked-border: rgba(251, 191, 36, 0.25);
+  --tag-learning-bg: rgba(52, 211, 153, 0.12);
+  --tag-learning-border: rgba(52, 211, 153, 0.25);
+}
+
+/* ===== Base Styles ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+body {
+  font-family: 'Inter Tight', system-ui, sans-serif;
+  background-color: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+}
+
+/* ===== Typography ===== */
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+/* ===== Selection ===== */
+::selection {
+  background-color: var(--accent);
+  color: white;
+}
+
+/* ===== Focus ===== */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--fg-faint);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-dim);
+}
+
+/* ===== Skeleton Shimmer ===== */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-elev) 25%,
+    var(--line-strong) 50%,
+    var(--bg-elev) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+  border-radius: 8px;
+}
+
+/* ===== Grain Texture ===== */
+.grain-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.03;
+  background-image: radial-gradient(circle, var(--fg) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+/* ===== Gradient Blobs ===== */
+.gradient-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  animation: blob 7s infinite;
+}
+
+.gradient-blob-1 {
+  width: 400px;
+  height: 400px;
+  background: var(--accent);
+  top: -100px;
+  right: -100px;
+}
+
+.gradient-blob-2 {
+  width: 350px;
+  height: 350px;
+  background: var(--accent-amber);
+  bottom: -50px;
+  left: -100px;
+  animation-delay: 2s;
+}
+
+.gradient-blob-3 {
+  width: 300px;
+  height: 300px;
+  background: var(--accent-purple);
+  top: 50%;
+  left: 50%;
+  animation-delay: 4s;
+}
+
+/* ===== Glassmorphism ===== */
+.glass {
+  background: rgba(var(--bg), 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.dark .glass {
+  background: rgba(10, 9, 16, 0.8);
+}
+
+.light .glass {
+  background: rgba(244, 241, 236, 0.8);
+}
+
+/* ===== Transitions ===== */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ===== Tag Colors ===== */
+.tag-bug {
+  background: var(--tag-bug-bg);
+  color: var(--error);
+  border: 1px solid var(--tag-bug-border);
+}
+
+.tag-feature {
+  background: var(--tag-feature-bg);
+  color: var(--accent-teal);
+  border: 1px solid var(--tag-feature-border);
+}
+
+.tag-review {
+  background: var(--tag-review-bg);
+  color: var(--accent-purple);
+  border: 1px solid var(--tag-review-border);
+}
+
+.tag-blocked {
+  background: var(--tag-blocked-bg);
+  color: var(--accent-amber);
+  border: 1px solid var(--tag-blocked-border);
+}
+
+.tag-learning {
+  background: var(--tag-learning-bg);
+  color: var(--accent-emerald);
+  border: 1px solid var(--tag-learning-border);
+}
+
+.tag-default {
+  background: var(--bg-elev);
+  color: var(--fg-dim);
+  border: 1px solid var(--line);
+}

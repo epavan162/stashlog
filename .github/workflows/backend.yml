@@ -1,0 +1,20 @@
+name: Deploy Backend
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**']
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+          cache-dependency-path: backend/go.sum
+      - run: cd backend && go build ./...
+      - run: cd backend && go test ./...
+      - name: Deploy to Render
+        run: |
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}

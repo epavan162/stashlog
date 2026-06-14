@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -41,7 +42,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	// Clean up soft-deleted account with same email to prevent unique index violation
 	var unscopedUser models.User
-	if err := db.DB.Unscoped().Where("email = ?", req.Email).First(&unscopedUser).Error; err == nil {
+	if err := db.DB.Unscoped().Where("email = ?", strings.ToLower(req.Email)).First(&unscopedUser).Error; err == nil {
 		if unscopedUser.DeletedAt != nil {
 			db.DB.Unscoped().Delete(&unscopedUser)
 		}
@@ -49,7 +50,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	// Check if user exists (prevent email enumeration — same response)
 	var existingUser models.User
-	result := db.DB.Where("email = ?", req.Email).First(&existingUser)
+	result := db.DB.Where("email = ?", strings.ToLower(req.Email)).First(&existingUser)
 	if result.Error == nil {
 		// User exists but return same message
 		c.JSON(http.StatusOK, gin.H{"message": "If this email is not registered, a verification email has been sent."})
@@ -64,7 +65,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	user := models.User{
 		Name:          utils.SanitizeString(req.Name),
-		Email:         req.Email,
+		Email:         strings.ToLower(req.Email),
 		PasswordHash:  hashedPassword,
 		AuthProvider:  models.AuthProviderEmail,
 		IsPasswordSet: true,
@@ -103,7 +104,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	// Check if account is soft-deleted to return specific message
 	var unscopedUser models.User
-	if err := db.DB.Unscoped().Where("email = ?", req.Email).First(&unscopedUser).Error; err == nil {
+	if err := db.DB.Unscoped().Where("email = ?", strings.ToLower(req.Email)).First(&unscopedUser).Error; err == nil {
 		if unscopedUser.DeletedAt != nil {
 			c.JSON(http.StatusForbidden, gin.H{"error": "This account has been deleted", "code": "ACCOUNT_DELETED"})
 			return
@@ -111,7 +112,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	var user models.User
-	if err := db.DB.Where("email = ? AND deleted_at IS NULL", req.Email).First(&user).Error; err != nil {
+	if err := db.DB.Where("email = ? AND deleted_at IS NULL", strings.ToLower(req.Email)).First(&user).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
@@ -154,7 +155,7 @@ func (h *AuthHandler) GoogleAuth(c *gin.Context) {
 
 	// Clean up soft-deleted accounts with same email or google_id to avoid constraint violations
 	var unscopedUser models.User
-	if err := db.DB.Unscoped().Where("email = ? OR (google_id = ? AND google_id != '')", googleUser.Email, googleUser.Sub).First(&unscopedUser).Error; err == nil {
+	if err := db.DB.Unscoped().Where("email = ? OR (google_id = ? AND google_id != '')", strings.ToLower(googleUser.Email), googleUser.Sub).First(&unscopedUser).Error; err == nil {
 		if unscopedUser.DeletedAt != nil {
 			db.DB.Unscoped().Delete(&unscopedUser)
 		}
@@ -165,7 +166,7 @@ func (h *AuthHandler) GoogleAuth(c *gin.Context) {
 
 	if err != nil {
 		// Check if email exists with email provider
-		err = db.DB.Where("email = ? AND deleted_at IS NULL", googleUser.Email).First(&user).Error
+		err = db.DB.Where("email = ? AND deleted_at IS NULL", strings.ToLower(googleUser.Email)).First(&user).Error
 		if err == nil {
 			// Link Google to existing email account
 			user.GoogleID = googleUser.Sub
@@ -175,7 +176,7 @@ func (h *AuthHandler) GoogleAuth(c *gin.Context) {
 			// New user
 			user = models.User{
 				Name:          googleUser.Name,
-				Email:         googleUser.Email,
+				Email:         strings.ToLower(googleUser.Email),
 				GoogleID:      googleUser.Sub,
 				AuthProvider:  models.AuthProviderGoogle,
 				EmailVerified: true,
@@ -342,7 +343,7 @@ func (h *AuthHandler) ResendVerification(c *gin.Context) {
 	}()
 
 	var user models.User
-	if err := db.DB.Where("email = ? AND email_verified = false AND deleted_at IS NULL", email).First(&user).Error; err != nil {
+	if err := db.DB.Where("email = ? AND email_verified = false AND deleted_at IS NULL", strings.ToLower(email)).First(&user).Error; err != nil {
 		return
 	}
 

@@ -67,15 +67,16 @@ func (s *CronService) processUser(user models.User) {
 	minute := localTime.Minute()
 	weekday := localTime.Weekday()
 
-	// Skip all processing on weekends
+	// Skip weekend processing for weekday-only jobs (daily standup emails and nudges)
 	isWeekday := weekday >= time.Monday && weekday <= time.Friday
 
-	// 1 AM Mon-Fri: Generate daily summary
-	if isWeekday && hour == 1 && minute < 30 {
+	// 1 AM Tue-Sat: Generate daily summary (for Mon-Fri logs)
+	isTueToSat := weekday >= time.Tuesday && weekday <= time.Saturday
+	if isTueToSat && hour == 1 && minute < 30 {
 		s.generateDailySummary(user)
 	}
 
-	// 8 AM Mon-Fri: Send daily email
+	// 8 AM Mon-Fri: Send daily standup email
 	if isWeekday && hour == 8 && minute < 30 {
 		s.sendDailyEmail(user, weekday)
 	}
@@ -85,13 +86,9 @@ func (s *CronService) processUser(user models.User) {
 		s.sendNudgeEmail(user)
 	}
 
-	// Friday 11 PM: Generate weekly summary
-	if weekday == time.Friday && hour == 23 && minute < 30 {
+	// Saturday 10 AM: Generate weekly summary and send weekly digest email
+	if weekday == time.Saturday && hour == 10 && minute < 30 {
 		s.generateWeeklySummary(user)
-	}
-
-	// Saturday 8 AM: Send weekly digest email
-	if weekday == time.Saturday && hour == 8 && minute < 30 {
 		s.sendWeeklyDigestEmail(user)
 	}
 }
@@ -100,16 +97,17 @@ func (s *CronService) generateDailySummary(user models.User) {
 	localTime := getUserLocalTime(user.Timezone)
 	// Generate summary for yesterday's logs
 	yesterday := time.Date(localTime.Year(), localTime.Month(), localTime.Day()-1, 0, 0, 0, 0, localTime.Location())
+	yesterdayUTC := time.Date(yesterday.Year(), yesterday.Month(), yesterday.Day(), 0, 0, 0, 0, time.UTC)
 
 	// Check if summary already exists
 	var existing models.Summary
-	if err := db.DB.Where("user_id = ? AND log_date = ? AND summary_type = ?", user.ID, yesterday, models.SummaryTypeDaily).First(&existing).Error; err == nil {
+	if err := db.DB.Where("user_id = ? AND log_date = ? AND summary_type = ?", user.ID, yesterdayUTC, models.SummaryTypeDaily).First(&existing).Error; err == nil {
 		return // Already generated
 	}
 
 	// Get all logs for yesterday
 	var logs []models.Log
-	db.DB.Where("user_id = ? AND log_date = ?", user.ID, yesterday).Find(&logs)
+	db.DB.Where("user_id = ? AND log_date = ?", user.ID, yesterdayUTC).Find(&logs)
 
 	if len(logs) == 0 {
 		return // No logs to summarize
@@ -129,7 +127,7 @@ func (s *CronService) generateDailySummary(user models.User) {
 
 	summary := models.Summary{
 		UserID:           user.ID,
-		LogDate:          yesterday,
+		LogDate:          yesterdayUTC,
 		SummaryType:      models.SummaryTypeDaily,
 		RawLogs:          rawLogs,
 		GeneratedSummary: generatedSummary,
@@ -138,7 +136,7 @@ func (s *CronService) generateDailySummary(user models.User) {
 	}
 
 	db.DB.Create(&summary)
-	log.Printf("Generated daily summary for %s (date: %s)", user.Email, yesterday.Format("2006-01-02"))
+	log.Printf("Generated daily summary for %s (date: %s)", user.Email, yesterdayUTC.Format("2006-01-02"))
 }
 
 func (s *CronService) sendDailyEmail(user models.User, weekday time.Weekday) {
@@ -157,10 +155,11 @@ func (s *CronService) sendDailyEmail(user models.User, weekday time.Weekday) {
 		// Other days show yesterday's summary
 		summaryDate = time.Date(localTime.Year(), localTime.Month(), localTime.Day()-1, 0, 0, 0, 0, localTime.Location())
 	}
+	summaryDateUTC := time.Date(summaryDate.Year(), summaryDate.Month(), summaryDate.Day(), 0, 0, 0, 0, time.UTC)
 
 	var summary models.Summary
-	if err := db.DB.Where("user_id = ? AND log_date = ? AND summary_type = ?", user.ID, summaryDate, models.SummaryTypeDaily).First(&summary).Error; err != nil {
-		log.Printf("No summary found for %s on %s", user.Email, summaryDate.Format("2006-01-02"))
+	if err := db.DB.Where("user_id = ? AND log_date = ? AND summary_type = ?", user.ID, summaryDateUTC, models.SummaryTypeDaily).First(&summary).Error; err != nil {
+		log.Printf("No summary found for %s on %s", user.Email, summaryDateUTC.Format("2006-01-02"))
 		return
 	}
 
@@ -181,10 +180,11 @@ func (s *CronService) sendNudgeEmail(user models.User) {
 
 	localTime := getUserLocalTime(user.Timezone)
 	today := time.Date(localTime.Year(), localTime.Month(), localTime.Day(), 0, 0, 0, 0, localTime.Location())
+	todayUTC := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.UTC)
 
 	// Check if user has logged anything today
 	var count int64
-	db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date = ?", user.ID, today).Count(&count)
+	db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date = ?", user.ID, todayUTC).Count(&count)
 
 	if count > 0 {
 		return // Already logged today
@@ -216,9 +216,12 @@ func (s *CronService) generateWeeklySummary(user models.User) {
 	monday := time.Date(localTime.Year(), localTime.Month(), localTime.Day()-daysFromMonday, 0, 0, 0, 0, localTime.Location())
 	friday := monday.AddDate(0, 0, 4)
 
+	mondayUTC := time.Date(monday.Year(), monday.Month(), monday.Day(), 0, 0, 0, 0, time.UTC)
+	fridayUTC := time.Date(friday.Year(), friday.Month(), friday.Day(), 0, 0, 0, 0, time.UTC)
+
 	// Check if user has zero logs that entire week
 	var logCount int64
-	db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date >= ? AND log_date <= ?", user.ID, monday, friday).Count(&logCount)
+	db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date >= ? AND log_date <= ?", user.ID, mondayUTC, fridayUTC).Count(&logCount)
 	if logCount == 0 {
 		log.Printf("Skip weekly summary generation for %s (no logs this week)", user.Email)
 		return
@@ -226,14 +229,14 @@ func (s *CronService) generateWeeklySummary(user models.User) {
 
 	// Check if already exists
 	var existing models.Summary
-	if err := db.DB.Where("user_id = ? AND log_date = ? AND summary_type = ?", user.ID, monday, models.SummaryTypeWeekly).First(&existing).Error; err == nil {
+	if err := db.DB.Where("user_id = ? AND log_date = ? AND summary_type = ?", user.ID, mondayUTC, models.SummaryTypeWeekly).First(&existing).Error; err == nil {
 		return // Already generated
 	}
 
 	// Get all daily summaries for Mon–Fri of that week
 	var dailySummaries []models.Summary
 	db.DB.Where("user_id = ? AND log_date >= ? AND log_date <= ? AND summary_type = ?",
-		user.ID, monday, friday, models.SummaryTypeDaily).Order("log_date ASC").Find(&dailySummaries)
+		user.ID, mondayUTC, fridayUTC, models.SummaryTypeDaily).Order("log_date ASC").Find(&dailySummaries)
 
 	// Merge all daily summaries into one string
 	mergedSummaries := ""
@@ -247,7 +250,7 @@ func (s *CronService) generateWeeklySummary(user models.User) {
 	// If no daily summaries were generated but logs exist
 	if len(dailySummaries) == 0 && logCount > 0 {
 		var logs []models.Log
-		db.DB.Where("user_id = ? AND log_date >= ? AND log_date <= ?", user.ID, monday, friday).Order("log_date ASC").Find(&logs)
+		db.DB.Where("user_id = ? AND log_date >= ? AND log_date <= ?", user.ID, mondayUTC, fridayUTC).Order("log_date ASC").Find(&logs)
 		for _, l := range logs {
 			mergedSummaries += fmt.Sprintf("- [%s] %s\n", l.LogDate.Format("2006-01-02"), l.Content)
 		}
@@ -259,7 +262,7 @@ func (s *CronService) generateWeeklySummary(user models.User) {
 	if isFallback {
 		// Use bullet list of raw daily logs
 		var dailyLogs []models.Log
-		db.DB.Where("user_id = ? AND log_date >= ? AND log_date <= ?", user.ID, monday, friday).Order("log_date ASC, created_at ASC").Find(&dailyLogs)
+		db.DB.Where("user_id = ? AND log_date >= ? AND log_date <= ?", user.ID, mondayUTC, fridayUTC).Order("log_date ASC, created_at ASC").Find(&dailyLogs)
 		fallbackContent := "## Weekly Recap (Fallback)\n\n"
 		for _, l := range dailyLogs {
 			tagPrefix := ""
@@ -273,7 +276,7 @@ func (s *CronService) generateWeeklySummary(user models.User) {
 
 	weekSummary := models.Summary{
 		UserID:           user.ID,
-		LogDate:          monday,
+		LogDate:          mondayUTC,
 		SummaryType:      models.SummaryTypeWeekly,
 		RawLogs:          mergedSummaries,
 		GeneratedSummary: weeklySummary,
@@ -282,7 +285,7 @@ func (s *CronService) generateWeeklySummary(user models.User) {
 	}
 
 	db.DB.Create(&weekSummary)
-	log.Printf("Generated weekly summary for %s (week starting: %s, fallback: %t)", user.Email, monday.Format("2006-01-02"), isFallback)
+	log.Printf("Generated weekly summary for %s (week starting: %s, fallback: %t)", user.Email, mondayUTC.Format("2006-01-02"), isFallback)
 }
 
 func (s *CronService) sendWeeklyDigestEmail(user models.User) {
@@ -302,6 +305,9 @@ func (s *CronService) sendWeeklyDigestEmail(user models.User) {
 	monday := time.Date(localTime.Year(), localTime.Month(), localTime.Day()-daysFromMonday, 0, 0, 0, 0, localTime.Location())
 	friday := monday.AddDate(0, 0, 4)
 
+	mondayUTC := time.Date(monday.Year(), monday.Month(), monday.Day(), 0, 0, 0, 0, time.UTC)
+	fridayUTC := time.Date(friday.Year(), friday.Month(), friday.Day(), 0, 0, 0, 0, time.UTC)
+
 	// Check if user email bounced
 	var bounceCount int64
 	db.DB.Model(&models.EmailLog{}).Where("user_id = ? AND status = ?", user.ID, models.EmailStatusBounced).Count(&bounceCount)
@@ -312,7 +318,7 @@ func (s *CronService) sendWeeklyDigestEmail(user models.User) {
 
 	// Check if weekly summary exists for this week
 	var weeklySummary models.Summary
-	if err := db.DB.Where("user_id = ? AND log_date = ? AND summary_type = ?", user.ID, monday, models.SummaryTypeWeekly).First(&weeklySummary).Error; err != nil {
+	if err := db.DB.Where("user_id = ? AND log_date = ? AND summary_type = ?", user.ID, mondayUTC, models.SummaryTypeWeekly).First(&weeklySummary).Error; err != nil {
 		// If no summary → skip, log as 'skipped' in email_logs
 		s.logEmailEvent(user.ID, models.EmailTypeWeekly, models.EmailStatusSkipped, "No weekly summary found")
 		log.Printf("Skipped weekly digest email for %s (no weekly summary found)", user.Email)
@@ -321,7 +327,7 @@ func (s *CronService) sendWeeklyDigestEmail(user models.User) {
 
 	// Count logged days (distinct days logged)
 	var logCount int64
-	db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date >= ? AND log_date <= ?", user.ID, monday, friday).
+	db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date >= ? AND log_date <= ?", user.ID, mondayUTC, fridayUTC).
 		Select("DISTINCT log_date").Count(&logCount)
 
 	streak := calculateStreak(user.ID, user.Timezone)
@@ -353,6 +359,7 @@ func getUserLocalTime(timezone string) time.Time {
 func calculateStreak(userID interface{}, timezone string) int {
 	localTime := getUserLocalTime(timezone)
 	today := time.Date(localTime.Year(), localTime.Month(), localTime.Day(), 0, 0, 0, 0, localTime.Location())
+	todayUTC := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.UTC)
 	streak := 0
 	current := today
 
@@ -365,7 +372,7 @@ func calculateStreak(userID interface{}, timezone string) int {
 	// start counting the streak from the previous weekday.
 	if current.Equal(today) {
 		var count int64
-		db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date = ?", userID, today).Count(&count)
+		db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date = ?", userID, todayUTC).Count(&count)
 		if count == 0 {
 			current = current.AddDate(0, 0, -1)
 			for current.Weekday() == time.Saturday || current.Weekday() == time.Sunday {
@@ -380,8 +387,9 @@ func calculateStreak(userID interface{}, timezone string) int {
 			current = current.AddDate(0, 0, -1)
 		}
 
+		currentUTC := time.Date(current.Year(), current.Month(), current.Day(), 0, 0, 0, 0, time.UTC)
 		var count int64
-		db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date = ?", userID, current).Count(&count)
+		db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date = ?", userID, currentUTC).Count(&count)
 
 		if count == 0 {
 			break

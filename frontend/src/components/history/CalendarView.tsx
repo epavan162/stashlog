@@ -3,21 +3,74 @@ import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, isToday, isWeekend, subMonths, addMonths } from 'date-fns';
 import { useLogs } from '../../hooks/useLogs';
 import { TagIcon } from '../ui/TagIcon';
+import { getTodayForTimezone } from '../../utils/helpers';
 
 interface CalendarViewProps {
   onDateSelect: (date: string) => void;
   selectedDate: string | null;
   tagFilter?: string;
   summaries?: any[];
+  user?: any;
 }
 
-export function CalendarView({ onDateSelect, selectedDate, tagFilter, summaries }: CalendarViewProps) {
+export function CalendarView({ onDateSelect, selectedDate, tagFilter, summaries, user }: CalendarViewProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const start = format(startOfMonth(currentMonth), 'yyyy-MM-dd');
   const end = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
 
   const { data } = useLogs(start, end);
+
+  const trackingStartDateStr = useMemo(() => {
+    if (!user?.created_at) return '';
+    const tz = user.timezone || 'Asia/Kolkata';
+    
+    const createdDate = new Date(user.created_at);
+    let localRegDate = new Date(createdDate);
+    
+    try {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false,
+      });
+      const parts = formatter.formatToParts(createdDate);
+      const val: Record<string, string> = {};
+      parts.forEach((p) => {
+        val[p.type] = p.value;
+      });
+      localRegDate = new Date(
+        parseInt(val.year),
+        parseInt(val.month) - 1,
+        parseInt(val.day),
+        parseInt(val.hour),
+        parseInt(val.minute),
+        parseInt(val.second)
+      );
+    } catch (e) {
+      // fallback
+    }
+
+    const startTracking = new Date(localRegDate);
+    startTracking.setHours(0, 0, 0, 0);
+
+    const regDay = localRegDate.getDay(); // 0 = Sunday, 6 = Saturday
+    if (regDay === 6) { // Saturday
+      startTracking.setDate(startTracking.getDate() + 2); // Next Monday
+    } else if (regDay === 0) { // Sunday
+      startTracking.setDate(startTracking.getDate() + 1); // Next Monday
+    }
+    
+    const yyyy = startTracking.getFullYear();
+    const mm = String(startTracking.getMonth() + 1).padStart(2, '0');
+    const dd = String(startTracking.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }, [user]);
 
   const loggedDates = useMemo(() => {
     const map = new Map<string, { logged: boolean; tags: string[] }>();
@@ -123,6 +176,15 @@ export function CalendarView({ onDateSelect, selectedDate, tagFilter, summaries 
 
           const hasDailySummary = summaryDates.has(dateKey);
 
+          const tz = user?.timezone || 'Asia/Kolkata';
+          const todayStr = getTodayForTimezone(tz);
+
+          const isMissed = !logged &&
+            trackingStartDateStr &&
+            dateKey >= trackingStartDateStr &&
+            !isWeekendDay &&
+            dateKey < todayStr;
+
           // Tag filter
           const matchesFilter = !tagFilter || (logInfo?.tags?.includes(tagFilter) ?? false);
           const isHighlighted = logged && matchesFilter;
@@ -147,14 +209,20 @@ export function CalendarView({ onDateSelect, selectedDate, tagFilter, summaries 
                 aspect-square rounded-lg flex flex-col items-center justify-between py-1.5 text-sm transition-smooth relative
                 ${isSelected ? 'ring-2 ring-accent' : ''}
                 ${isTodayDay ? 'ring-2 ring-accent/55' : ''}
-                ${isHighlighted ? 'hover:brightness-110' : 'hover:bg-bg-elev'}
+                ${isHighlighted || isMissed ? 'hover:brightness-110' : 'hover:bg-bg-elev'}
                 ${isFaded ? 'opacity-30' : ''}
               `}
               style={{
                 backgroundColor: isHighlighted
                   ? 'rgba(34,197,94,0.12)'
+                  : isMissed
+                  ? 'rgba(220,38,38,0.12)'
                   : 'transparent',
-                color: isHighlighted ? 'var(--success)' : 'var(--fg-dim)',
+                color: isHighlighted
+                  ? 'var(--success)'
+                  : isMissed
+                  ? 'var(--error)'
+                  : 'var(--fg-dim)',
               }}
             >
               {/* Sparkle or AI Badge */}
@@ -184,12 +252,12 @@ export function CalendarView({ onDateSelect, selectedDate, tagFilter, summaries 
 
       {/* Legend */}
       <div className="flex items-center gap-4 mt-4 pt-4 border-t" style={{ borderColor: 'var(--line)' }}>
-        <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--fg-faint)' }}>
+        <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: 'var(--fg-dim)' }}>
           <div className="w-3 h-3 rounded" style={{ backgroundColor: 'rgba(34,197,94,0.3)' }} />
           Logged
         </div>
-        <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--fg-faint)' }}>
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--bg-elev)' }} />
+        <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: 'var(--fg-dim)' }}>
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: 'rgba(220,38,38,0.3)' }} />
           Missed
         </div>
       </div>

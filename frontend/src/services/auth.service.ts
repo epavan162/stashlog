@@ -3,6 +3,8 @@ import axios from 'axios';
 import { API_BASE_URL } from '../utils/constants';
 import type { AuthResponse } from '../types';
 
+let activeRefreshPromise: Promise<any> | null = null;
+
 export const authService = {
   register: (name: string, email: string, password: string) =>
     api.post('/auth/register', { name, email, password }),
@@ -13,8 +15,17 @@ export const authService = {
   googleLogin: (idToken: string) =>
     api.post<AuthResponse>('/auth/google', { id_token: idToken }),
 
-  refresh: () =>
-    axios.post<AuthResponse>(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true }),
+  refresh: () => {
+    if (activeRefreshPromise) {
+      return activeRefreshPromise;
+    }
+    activeRefreshPromise = axios
+      .post<AuthResponse>(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true })
+      .finally(() => {
+        activeRefreshPromise = null;
+      });
+    return activeRefreshPromise;
+  },
 
   logout: () =>
     api.post('/auth/logout'),

@@ -22,16 +22,7 @@ export function LogEditor() {
   const [validationError, setValidationError] = useState<string>('');
 
   const timezone = user?.timezone || 'Asia/Kolkata';
-  const localTime = getLocalDateTime(timezone);
-  const isSaturdayGraceWindow = localTime.getDay() === 6 && localTime.getHours() < 10;
-
-  const getFridayDate = () => {
-    const lastFriday = new Date(localTime);
-    lastFriday.setDate(localTime.getDate() - 1);
-    return lastFriday.toISOString().split('T')[0];
-  };
-
-  const activeDate = isSaturdayGraceWindow ? getFridayDate() : getTodayForTimezone(timezone);
+  const activeDate = getTodayForTimezone(timezone);
 
   const { data, isLoading } = useQuery<any>({
     queryKey: ['logs', 'date', activeDate],
@@ -91,10 +82,6 @@ export function LogEditor() {
   };
 
   const isPastMidnight = (logDateStr: string) => {
-    if (isSaturdayGraceWindow) {
-      // During Saturday grace window, we allow deleting Friday logs
-      return false;
-    }
     const todayStr = getTodayForTimezone(timezone);
     const lDate = logDateStr.split('T')[0];
     return lDate !== todayStr;
@@ -114,7 +101,7 @@ export function LogEditor() {
       {/* Input Section */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold" style={{ color: 'var(--fg)' }}>
-          {isSaturdayGraceWindow ? "Log Friday's Missed Work" : "Add Log Entry"}
+          Add Log Entry
         </h3>
 
         <div className="relative">
@@ -195,7 +182,7 @@ export function LogEditor() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-semibold uppercase tracking-wider" style={{ color: 'var(--fg-dim)' }}>
-            {sortedLogs.length} {sortedLogs.length === 1 ? 'entry' : 'entries'} {isSaturdayGraceWindow ? "for Friday" : "today"}
+            {sortedLogs.length} {sortedLogs.length === 1 ? 'entry' : 'entries'} today
           </h4>
         </div>
 

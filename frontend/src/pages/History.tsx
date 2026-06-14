@@ -71,6 +71,57 @@ export default function History() {
     setSelectedDate(date);
   };
 
+  const trackingStartDateStr = useMemo(() => {
+    if (!user?.created_at) return '';
+    
+    // Parse created_at in user's local timezone
+    const createdDate = new Date(user.created_at);
+    let localRegDate = new Date(createdDate);
+    
+    try {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false,
+      });
+      const parts = formatter.formatToParts(createdDate);
+      const val: Record<string, string> = {};
+      parts.forEach((p) => {
+        val[p.type] = p.value;
+      });
+      localRegDate = new Date(
+        parseInt(val.year),
+        parseInt(val.month) - 1,
+        parseInt(val.day),
+        parseInt(val.hour),
+        parseInt(val.minute),
+        parseInt(val.second)
+      );
+    } catch (e) {
+      // fallback
+    }
+
+    const startTracking = new Date(localRegDate);
+    startTracking.setHours(0, 0, 0, 0);
+
+    const regDay = localRegDate.getDay(); // 0 = Sunday, 6 = Saturday
+    if (regDay === 6) { // Saturday
+      startTracking.setDate(startTracking.getDate() + 2); // Next Monday
+    } else if (regDay === 0) { // Sunday
+      startTracking.setDate(startTracking.getDate() + 1); // Next Monday
+    }
+    
+    const yyyy = startTracking.getFullYear();
+    const mm = String(startTracking.getMonth() + 1).padStart(2, '0');
+    const dd = String(startTracking.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }, [user, timezone]);
+
   // Generate list of weeks from current week back to user registration week (max 10 weeks)
   const weeksList = useMemo(() => {
     if (!user?.created_at) return [];
@@ -107,19 +158,41 @@ export default function History() {
         break;
       }
 
-      weeks.push({
-        mondayStr: monStr,
-        fridayStr: friStr,
-        monDate: mon,
-        friDate: fri,
-      });
+      // Calculate trackable days for this week
+      let trackableDays = 0;
+      if (trackingStartDateStr) {
+        for (let j = 0; j < 5; j++) {
+          const d = new Date(mon);
+          d.setDate(mon.getDate() + j);
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          const dStr = `${yyyy}-${mm}-${dd}`;
+          if (dStr >= trackingStartDateStr) {
+            trackableDays++;
+          }
+        }
+      } else {
+        trackableDays = 5;
+      }
+
+      // Only include the week if it has at least one trackable day
+      if (trackableDays > 0) {
+        weeks.push({
+          mondayStr: monStr,
+          fridayStr: friStr,
+          monDate: mon,
+          friDate: fri,
+          trackableDays,
+        });
+      }
 
       // Move current back to previous Sunday
       current = new Date(mon);
       current.setDate(mon.getDate() - 1);
     }
     return weeks;
-  }, [user, timezone]);
+  }, [user, timezone, trackingStartDateStr]);
 
   const getDaysLoggedForWeek = (monStr: string, friStr: string) => {
     if (!logsData?.logs) return 0;
@@ -172,10 +245,10 @@ export default function History() {
             </h1>
 
             {/* Tabs */}
-            <div className="flex p-0.5 rounded-lg border text-sm" style={{ backgroundColor: 'var(--bg-elev)', borderColor: 'var(--line)' }}>
+            <div className="flex w-full sm:w-auto p-0.5 rounded-lg border text-sm" style={{ backgroundColor: 'var(--bg-elev)', borderColor: 'var(--line)' }}>
               <button
                 onClick={() => setActiveTab('date')}
-                className={`px-4 py-1.5 rounded-md font-medium transition-smooth ${
+                className={`flex-1 sm:flex-none text-center px-4 py-1.5 rounded-md font-medium transition-smooth ${
                   activeTab === 'date' ? 'bg-card shadow-sm text-accent font-semibold' : 'text-fg-dim hover:text-fg'
                 }`}
                 style={{ backgroundColor: activeTab === 'date' ? 'var(--bg-card)' : 'transparent' }}
@@ -184,7 +257,7 @@ export default function History() {
               </button>
               <button
                 onClick={() => setActiveTab('week')}
-                className={`px-4 py-1.5 rounded-md font-medium transition-smooth ${
+                className={`flex-1 sm:flex-none text-center px-4 py-1.5 rounded-md font-medium transition-smooth ${
                   activeTab === 'week' ? 'bg-card shadow-sm text-accent font-semibold' : 'text-fg-dim hover:text-fg'
                 }`}
                 style={{ backgroundColor: activeTab === 'week' ? 'var(--bg-card)' : 'transparent' }}
@@ -230,6 +303,7 @@ export default function History() {
                   selectedDate={selectedDate}
                   tagFilter={tagFilter || undefined}
                   summaries={summariesData?.summaries}
+                  user={user}
                 />
               </Card>
 
@@ -285,8 +359,15 @@ export default function History() {
                             {formatWeekRange(week.monDate, week.friDate)}
                           </h4>
                           <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--fg-faint)' }}>
-                            <span className="font-semibold" style={{ color: daysLogged > 0 ? 'var(--success)' : 'var(--fg-faint)' }}>
-                              {daysLogged} / 5 days logged
+                            <span
+                              className="font-semibold"
+                              style={{
+                                color: daysLogged > 0
+                                  ? 'var(--success)'
+                                  : (isCur ? 'var(--fg-faint)' : 'var(--error)')
+                              }}
+                            >
+                              {daysLogged} / {week.trackableDays} days logged
                             </span>
                           </div>
                         </div>
@@ -326,7 +407,7 @@ export default function History() {
                               </p>
                             ) : isCur ? (
                               <p className="text-sm italic" style={{ color: 'var(--fg-faint)' }}>
-                                Weekly summary generates Friday at 11 PM
+                                Weekly summary generates Saturday at 10 AM
                               </p>
                             ) : (
                               <p className="text-sm italic" style={{ color: 'var(--fg-faint)' }}>

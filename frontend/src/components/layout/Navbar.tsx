@@ -151,7 +151,7 @@ export function Navbar() {
                   Sign In
                 </Button>
                 <Button variant="primary" size="sm" onClick={() => navigate('/register')}>
-                  Get Started
+                  Sign Up
                 </Button>
               </div>
             )}
@@ -183,26 +183,39 @@ export function Navbar() {
           >
             <div className="p-4 flex flex-col gap-1">
               {isAuthenticated ? (
-                navLinks.map((link) => (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-smooth ${
-                      location.pathname === link.path
-                        ? 'bg-accent/10 text-accent'
-                        : 'hover:bg-bg-elev'
-                    }`}
-                    style={{ color: location.pathname === link.path ? undefined : 'var(--fg-dim)' }}
+                <>
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-smooth ${
+                        location.pathname === link.path
+                          ? 'bg-accent/10 text-accent'
+                          : 'hover:bg-bg-elev'
+                      }`}
+                      style={{ color: location.pathname === link.path ? undefined : 'var(--fg-dim)' }}
+                    >
+                      <link.icon size={18} />
+                      {link.label}
+                    </Link>
+                  ))}
+                  <button
+                    onClick={() => {
+                      logout.mutate();
+                      setIsMobileOpen(false);
+                    }}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-smooth hover:bg-bg-elev text-left w-full"
+                    style={{ color: 'var(--error)' }}
                   >
-                    <link.icon size={18} />
-                    {link.label}
-                  </Link>
-                ))
+                    <LogOut size={18} />
+                    Sign Out
+                  </button>
+                </>
               ) : (
                 <>
                   <Link
                     to="/login"
-                    className="px-4 py-3 rounded-lg text-sm font-medium hover:bg-bg-elev transition-smooth"
+                    className="px-4 py-3 rounded-lg text-sm font-medium hover:bg-bg-elev transition-smooth text-center"
                     style={{ color: 'var(--fg-dim)' }}
                   >
                     Sign In
@@ -211,7 +224,7 @@ export function Navbar() {
                     to="/register"
                     className="px-4 py-3 rounded-lg text-sm font-medium bg-accent text-white text-center"
                   >
-                    Get Started
+                    Sign Up
                   </Link>
                 </>
               )}

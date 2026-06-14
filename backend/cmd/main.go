@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	_ "time/tzdata"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"

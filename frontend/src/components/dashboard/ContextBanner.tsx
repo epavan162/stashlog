@@ -38,9 +38,9 @@ export function ContextBanner() {
     // Saturday before 10 AM
     if (day === 6 && hour < 10) {
       return {
-        message: "Forgot to log Friday's work? You have until 10 AM today to add it ⏰",
+        message: "Enjoy your weekend rest! Your weekly summary is generating at 10 AM today ⏰",
         emoji: "⏰",
-        type: 'warning' as const
+        type: 'info' as const
       };
     }
 

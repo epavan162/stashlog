@@ -137,9 +137,20 @@ func (h *UserHandler) DeleteMe(c *gin.Context) {
 func (h *UserHandler) GetSessions(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
-	var sessions []models.Session
+	var activeSessions []models.Session
 	db.DB.Where("user_id = ? AND expires_at > ? AND device_info != ?", userID, time.Now(), "email-verification").
-		Order("created_at DESC").Find(&sessions)
+		Order("created_at DESC").Find(&activeSessions)
+
+	seen := make(map[string]bool)
+	var sessions []models.Session
+	for _, sess := range activeSessions {
+		if seen[sess.DeviceInfo] {
+			db.DB.Delete(&sess)
+		} else {
+			seen[sess.DeviceInfo] = true
+			sessions = append(sessions, sess)
+		}
+	}
 
 	c.JSON(http.StatusOK, gin.H{"sessions": sessions})
 }
@@ -196,6 +207,7 @@ func (h *UserHandler) UpdatePreferences(c *gin.Context) {
 // Helper to get streak - calls streak service
 func services_getStreak(userID uuid.UUID, timezone string) map[string]interface{} {
 	today := utils.GetTodayInTimezone(timezone)
+	todayUTC := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.UTC)
 
 	// Calculate streak (weekdays only)
 	streak := 0
@@ -210,7 +222,7 @@ func services_getStreak(userID uuid.UUID, timezone string) map[string]interface{
 	// start counting the streak from the previous weekday.
 	if current.Equal(today) {
 		var count int64
-		db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date = ?", userID, today).Count(&count)
+		db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date = ?", userID, todayUTC).Count(&count)
 		if count == 0 {
 			current = current.AddDate(0, 0, -1)
 			for current.Weekday() == time.Saturday || current.Weekday() == time.Sunday {
@@ -225,8 +237,9 @@ func services_getStreak(userID uuid.UUID, timezone string) map[string]interface{
 			current = current.AddDate(0, 0, -1)
 		}
 
+		currentUTC := time.Date(current.Year(), current.Month(), current.Day(), 0, 0, 0, 0, time.UTC)
 		var count int64
-		db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date = ?", userID, current).Count(&count)
+		db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date = ?", userID, currentUTC).Count(&count)
 
 		if count == 0 {
 			break
@@ -246,8 +259,9 @@ func services_getStreak(userID uuid.UUID, timezone string) map[string]interface{
 	weekStatus := make([]map[string]interface{}, 0)
 	for i := 0; i < 5; i++ {
 		day := monday.AddDate(0, 0, i)
+		dayUTC := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, time.UTC)
 		var count int64
-		db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date = ?", userID, day).Count(&count)
+		db.DB.Model(&models.Log{}).Where("user_id = ? AND log_date = ?", userID, dayUTC).Count(&count)
 		weekStatus = append(weekStatus, map[string]interface{}{
 			"date":   day.Format("2006-01-02"),
 			"day":    day.Weekday().String()[:3],

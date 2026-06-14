@@ -264,8 +264,16 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 		return
 	}
 
-	db.DB.Model(&models.User{}).Where("id = ?", session.UserID).Update("email_verified", true)
+	var user models.User
+	if err := db.DB.First(&user, "id = ?", session.UserID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	db.DB.Model(&user).Update("email_verified", true)
 	db.DB.Delete(&session)
+
+	go h.emailService.SendWelcomeEmail(user.Email, user.Name)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Email verified successfully"})
 }
@@ -303,6 +311,11 @@ func (h *AuthHandler) SetPassword(c *gin.Context) {
 
 	if user.AuthProvider == models.AuthProviderGoogle {
 		updates["auth_provider"] = models.AuthProviderBoth
+	}
+
+	// Send welcome email if setting password for the first time (Google onboarding completion)
+	if !user.IsPasswordSet {
+		go h.emailService.SendWelcomeEmail(user.Email, user.Name)
 	}
 
 	db.DB.Model(&user).Updates(updates)
@@ -368,12 +381,18 @@ func (h *AuthHandler) issueTokens(c *gin.Context, user *models.User) {
 		return
 	}
 
+	// Clean up old sessions on the same device/User-Agent to prevent duplicates
+	deviceInfo := c.GetHeader("User-Agent")
+	if deviceInfo != "" {
+		db.DB.Where("user_id = ? AND device_info = ?", user.ID, deviceInfo).Delete(&models.Session{})
+	}
+
 	// Store refresh token session
 	tokenHash := utils.HashToken(refreshToken)
 	session := models.Session{
 		UserID:     user.ID,
 		TokenHash:  tokenHash,
-		DeviceInfo: c.GetHeader("User-Agent"),
+		DeviceInfo: deviceInfo,
 		IPAddress:  c.ClientIP(),
 		ExpiresAt:  time.Now().Add(7 * 24 * time.Hour),
 	}

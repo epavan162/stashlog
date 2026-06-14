@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"

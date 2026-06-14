@@ -50,6 +50,17 @@ export function LogDetailModal({ isOpen, onClose, date, initialTag }: LogDetailM
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  // Lock body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
   // Fetch current user details for timezone
   const { data: userData } = useQuery<any>({
     queryKey: ['user', 'me'],

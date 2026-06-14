@@ -37,9 +37,7 @@ export default function Dashboard() {
   const timezone = userData?.user?.timezone || 'Asia/Kolkata';
   const localTime = getLocalDateTime(timezone);
   const day = localTime.getDay(); // 0 = Sunday, 6 = Saturday
-  const hour = localTime.getHours();
   const isWeekend = day === 0 || day === 6;
-  const isSaturdayGraceWindow = day === 6 && hour < 10;
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4" style={{ backgroundColor: 'var(--bg)' }}>
@@ -61,7 +59,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
             {/* Left: Editor or Weekend Screen */}
             <div className="lg:col-span-3">
-              {isWeekend && !isSaturdayGraceWindow ? (
+              {isWeekend ? (
                 <Card>
                   <WeekendScreen user={userData?.user} streak={streak} />
                 </Card>

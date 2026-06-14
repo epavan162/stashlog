@@ -100,24 +100,17 @@ func (h *LogHandler) CreateLog(c *gin.Context) {
 
 	// Truncate time for comparison
 	logDateOnly := time.Date(logDate.Year(), logDate.Month(), logDate.Day(), 0, 0, 0, 0, time.UTC)
-	lastFriday := utils.GetLastFriday(localTime)
-	lastFridayOnly := time.Date(lastFriday.Year(), lastFriday.Month(), lastFriday.Day(), 0, 0, 0, 0, time.UTC)
+	todayOnly := time.Date(localTime.Year(), localTime.Month(), localTime.Day(), 0, 0, 0, 0, time.UTC)
 
-	if weekday == time.Sunday {
+	if weekday == time.Saturday || weekday == time.Sunday {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Logging is not available on weekends"})
 		return
 	}
 
-	if weekday == time.Saturday {
-		if localTime.Hour() >= 10 {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Friday log window has closed"})
-			return
-		}
-		// Saturday before 10 AM: only allow if logDate is last Friday
-		if !logDateOnly.Equal(lastFridayOnly) {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Friday log window is open, but only Friday's logs can be submitted."})
-			return
-		}
+	// Weekdays (Monday to Friday): must log for that day (before midnight)
+	if !logDateOnly.Equal(todayOnly) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You can only submit logs for the current day."})
+		return
 	}
 
 	logEntry := models.Log{
@@ -219,14 +212,7 @@ func (h *LogHandler) DeleteLog(c *gin.Context) {
 
 	logDateInZone := time.Date(logEntry.LogDate.Year(), logEntry.LogDate.Month(), logEntry.LogDate.Day(), 0, 0, 0, 0, loc)
 
-	// Saturday before 10 AM grace window check
-	isSaturdayGrace := localTime.Weekday() == time.Saturday && localTime.Hour() < 10
-	lastFriday := utils.GetLastFriday(localTime)
-	lastFridayOnly := time.Date(lastFriday.Year(), lastFriday.Month(), lastFriday.Day(), 0, 0, 0, 0, loc)
-
-	if isSaturdayGrace && logDateInZone.Equal(lastFridayOnly) {
-		// Allow deleting Friday logs during Saturday morning grace window
-	} else if today.After(logDateInZone) {
+	if today.After(logDateInZone) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Log entries cannot be deleted after midnight"})
 		return
 	}
@@ -247,16 +233,17 @@ func (h *LogHandler) GetTodayLogs(c *gin.Context) {
 	db.DB.First(&user, "id = ?", userID)
 
 	today := utils.GetTodayInTimezone(user.Timezone)
+	todayUTC := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.UTC)
 
 	var logs []models.Log
-	if err := db.DB.Where("user_id = ? AND log_date = ?", userID, today).Order("created_at DESC").Find(&logs).Error; err != nil {
+	if err := db.DB.Where("user_id = ? AND log_date = ?", userID, todayUTC).Order("created_at DESC").Find(&logs).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch logs"})
 		return
 	}
 
 	// Check if summary exists (locked)
 	var summary models.Summary
-	isLocked := db.DB.Where("user_id = ? AND log_date = ? AND summary_type = ?", userID, today, models.SummaryTypeDaily).First(&summary).Error == nil
+	isLocked := db.DB.Where("user_id = ? AND log_date = ? AND summary_type = ?", userID, todayUTC, models.SummaryTypeDaily).First(&summary).Error == nil
 
 	c.JSON(http.StatusOK, gin.H{"logs": logs, "date": today.Format("2006-01-02"), "is_locked": isLocked})
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { User, Shield, Mail, GitBranch, AlertTriangle, Trash2, LogOut, Monitor, Eye, EyeOff, Check, X } from 'lucide-react';
+import { User, Shield, Mail, GitBranch, AlertTriangle, Trash2, LogOut, Monitor, Eye, EyeOff, Check, X, ChevronDown } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
@@ -134,16 +134,23 @@ export default function Settings() {
               <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} />
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium" style={{ color: 'var(--fg-dim)' }}>Timezone</label>
-                <select
-                  value={timezone}
-                  onChange={(e) => setTimezone(e.target.value)}
-                  className="w-full h-11 px-4 rounded-input text-sm border outline-none transition-smooth"
-                  style={{ backgroundColor: 'var(--bg-elev)', color: 'var(--fg)', borderColor: 'var(--line-strong)' }}
-                >
-                  {TIMEZONE_OPTIONS.map((tz) => (
-                    <option key={tz} value={tz}>{tz}</option>
-                  ))}
-                </select>
+                <div className="relative w-full">
+                  <select
+                    value={timezone}
+                    onChange={(e) => setTimezone(e.target.value)}
+                    className="w-full h-11 pl-4 pr-12 rounded-input text-sm border outline-none appearance-none transition-smooth"
+                    style={{ backgroundColor: 'var(--bg-elev)', color: 'var(--fg)', borderColor: 'var(--line-strong)' }}
+                  >
+                    {TIMEZONE_OPTIONS.map((tz) => (
+                      <option key={tz} value={tz}>{tz}</option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none opacity-60"
+                    size={16}
+                    style={{ color: 'var(--fg)' }}
+                  />
+                </div>
               </div>
               <Button onClick={() => updateProfile.mutate()} isLoading={updateProfile.isPending}>Save Changes</Button>
             </div>
@@ -156,11 +163,11 @@ export default function Settings() {
               <h2 className="text-lg font-semibold" style={{ color: 'var(--fg)' }}>Security</h2>
             </div>
 
-            <div className="space-y-4 mb-8">
+            <form onSubmit={(e) => { e.preventDefault(); changePassword.mutate(); }} className="space-y-4 mb-8">
               <h3 className="text-sm font-semibold" style={{ color: 'var(--fg-dim)' }}>Change Password</h3>
               <div className="relative">
                 <Input label="Current Password" type={showOldPw ? 'text' : 'password'} value={oldPassword}
-                  onChange={(e) => setOldPassword(e.target.value)} />
+                  onChange={(e) => setOldPassword(e.target.value)} autoComplete="current-password" />
                 <button type="button" onClick={() => setShowOldPw(!showOldPw)}
                   className="absolute right-3 top-[38px] p-1" style={{ color: 'var(--fg-faint)' }}>
                   {showOldPw ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -168,7 +175,7 @@ export default function Settings() {
               </div>
               <div className="relative">
                 <Input label="New Password" type={showNewPw ? 'text' : 'password'} value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)} />
+                  onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" />
                 <button type="button" onClick={() => setShowNewPw(!showNewPw)}
                   className="absolute right-3 top-[38px] p-1" style={{ color: 'var(--fg-faint)' }}>
                   {showNewPw ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -185,11 +192,11 @@ export default function Settings() {
                   ))}
                 </div>
               )}
-              <Button onClick={() => changePassword.mutate()} isLoading={changePassword.isPending}
+              <Button type="submit" isLoading={changePassword.isPending}
                 disabled={!passwordChecks.every((c) => c.valid)}>
                 Update Password
               </Button>
-            </div>
+            </form>
 
             <div className="border-t pt-6" style={{ borderColor: 'var(--line)' }}>
               <div className="flex items-center justify-between mb-4">

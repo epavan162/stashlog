@@ -9,6 +9,19 @@ import { TAG_OPTIONS, STALE_TIME } from '../utils/constants';
 import { getTodayForTimezone, getLocalDateTime, formatTime } from '../utils/helpers';
 import api from '../services/api';
 import type { Log } from '../types';
+import { FormattedSummary } from '../components/ui/FormattedSummary';
+import { TagIcon } from '../components/ui/TagIcon';
+
+const stripMarkdown = (text: string) => {
+  if (!text) return '';
+  return text
+    .replace(/^###\s+/gm, '')
+    .replace(/\*\*/g, '')
+    .replace(/\[(bug|feature|review|blocked|learning)\]/gi, '')
+    .replace(/^\s*[-*]\s+/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
 
 export default function History() {
   const [activeTab, setActiveTab] = useState<'date' | 'week'>('date');
@@ -187,23 +200,28 @@ export default function History() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setTagFilter('')}
-                  className={`px-3 py-1.5 rounded-pill text-xs font-mono transition-smooth ${
-                    !tagFilter ? 'bg-accent text-white' : 'tag-default'
+                  className={`px-3 py-1.5 rounded-pill text-xs font-mono transition-smooth flex items-center gap-1.5 ${
+                    !tagFilter ? 'bg-accent text-white font-semibold' : 'tag-default opacity-80 hover:opacity-100'
                   }`}
                 >
-                  All
+                  <TagIcon tag="all" size={14} color={!tagFilter ? 'white' : undefined} />
+                  <span>All</span>
                 </button>
-                {TAG_OPTIONS.map((tag) => (
-                  <button
-                    key={tag.value}
-                    onClick={() => setTagFilter(tagFilter === tag.value ? '' : tag.value)}
-                    className={`px-3 py-1.5 rounded-pill text-xs font-mono transition-smooth ${
-                      tagFilter === tag.value ? tag.className + ' ring-1 ring-current/30' : 'tag-default'
-                    }`}
-                  >
-                    {tag.label}
-                  </button>
-                ))}
+                {TAG_OPTIONS.map((tag) => {
+                  const isSelected = tagFilter === tag.value;
+                  return (
+                    <button
+                      key={tag.value}
+                      onClick={() => setTagFilter(isSelected ? '' : tag.value)}
+                      className={`px-3 py-1.5 rounded-pill text-xs font-mono transition-smooth flex items-center gap-1.5 ${
+                        isSelected ? tag.className + ' ring-1 ring-current/30 font-semibold' : 'tag-default opacity-80 hover:opacity-100'
+                      }`}
+                    >
+                      <TagIcon tag={tag.value} size={14} className={isSelected ? 'text-current' : ''} />
+                      <span>{tag.label}</span>
+                    </button>
+                  );
+                })}
               </div>
 
               <Card>
@@ -220,6 +238,7 @@ export default function History() {
                 isOpen={!!selectedDate}
                 onClose={() => setSelectedDate(null)}
                 date={selectedDate}
+                initialTag={tagFilter}
               />
             </div>
           ) : (
@@ -295,9 +314,7 @@ export default function History() {
                                   <Sparkles size={14} />
                                   Weekly standup summary
                                 </div>
-                                <p className="text-sm leading-relaxed whitespace-pre-wrap font-sans" style={{ color: 'var(--fg-dim)' }}>
-                                  {weekSummary.generated_summary}
-                                </p>
+                                <FormattedSummary text={weekSummary.generated_summary} />
                               </div>
                             ) : isNewUserForWeek() ? (
                               <p className="text-sm italic" style={{ color: 'var(--fg-faint)' }}>
@@ -323,7 +340,7 @@ export default function History() {
                       {/* Preview (when not expanded) */}
                       {!isExpanded && weekSummary && (
                         <div className="text-xs mt-2 truncate font-sans" style={{ color: 'var(--fg-faint)' }}>
-                          {weekSummary.generated_summary.slice(0, 100)}...
+                          {stripMarkdown(weekSummary.generated_summary).slice(0, 100)}...
                         </div>
                       )}
                     </div>

@@ -5,6 +5,7 @@ import { Calendar, Flame, Inbox, Sparkles } from 'lucide-react';
 import { STALE_TIME } from '../../utils/constants';
 import { getTodayForTimezone, getLocalDateTime } from '../../utils/helpers';
 import api from '../../services/api';
+import { FormattedSummary } from '../ui/FormattedSummary';
 
 interface WeekendScreenProps {
   user: any;
@@ -76,9 +77,7 @@ export function WeekendScreen({ user, streak }: WeekendScreenProps) {
             Nothing logged this week
           </div>
         ) : (
-          <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans" style={{ color: 'var(--fg-dim)' }}>
-            {weeklySummary.generated_summary}
-          </div>
+          <FormattedSummary text={weeklySummary.generated_summary} />
         )}
       </div>
 

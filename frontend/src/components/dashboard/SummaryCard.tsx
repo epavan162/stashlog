@@ -9,6 +9,7 @@ import { format, subDays } from 'date-fns';
 import { copyToClipboard } from '../../utils/helpers';
 import { STALE_TIME } from '../../utils/constants';
 import { SummaryCardSkeleton } from '../ui/Skeleton';
+import { FormattedSummary } from '../ui/FormattedSummary';
 
 export function SummaryCard() {
   const { addToast } = useToast();
@@ -116,12 +117,7 @@ export function SummaryCard() {
           </div>
         )}
 
-        <div
-          className="prose prose-sm max-w-none text-sm leading-relaxed whitespace-pre-wrap font-sans"
-          style={{ color: 'var(--fg-dim)' }}
-        >
-          {summary.generated_summary}
-        </div>
+        <FormattedSummary text={summary.generated_summary} />
 
         {summary.regeneration_count >= 1 && (
           <p className="text-xs" style={{ color: 'var(--fg-faint)' }}>

@@ -11,14 +11,17 @@ import { copyToClipboard, getLocalDateTime, getTodayForTimezone, getTagClassName
 import { STALE_TIME, TAG_OPTIONS } from '../../utils/constants';
 import { Skeleton } from '../ui/Skeleton';
 import api from '../../services/api';
+import { FormattedSummary } from '../ui/FormattedSummary';
+import { TagIcon } from '../ui/TagIcon';
 
 interface LogDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   date: string | null;
+  initialTag?: string;
 }
 
-export function LogDetailModal({ isOpen, onClose, date }: LogDetailModalProps) {
+export function LogDetailModal({ isOpen, onClose, date, initialTag }: LogDetailModalProps) {
   const { addToast } = useToast();
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
@@ -46,11 +49,6 @@ export function LogDetailModal({ isOpen, onClose, date }: LogDetailModalProps) {
     }
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
-
-  // Reset filter tab when date changes
-  useEffect(() => {
-    setActiveTab('all');
-  }, [date]);
 
   // Fetch current user details for timezone
   const { data: userData } = useQuery<any>({
@@ -102,6 +100,18 @@ export function LogDetailModal({ isOpen, onClose, date }: LogDetailModalProps) {
     });
     return Array.from(set);
   }, [logs]);
+
+  // Sync filter tab with initialTag when date/modal opens/changes
+  useEffect(() => {
+    if (isOpen) {
+      const tag = initialTag?.toLowerCase() || 'all';
+      if (tag === 'all' || tagsInDay.includes(tag)) {
+        setActiveTab(tag);
+      } else {
+        setActiveTab('all');
+      }
+    }
+  }, [isOpen, date, initialTag, tagsInDay]);
 
   // Modal tab options: show All, plus tags present on that day
   const modalTabs = useMemo(() => {
@@ -215,16 +225,25 @@ export function LogDetailModal({ isOpen, onClose, date }: LogDetailModalProps) {
                 <div className="px-5 py-3 border-b flex flex-wrap gap-1.5" style={{ borderColor: 'var(--line)', backgroundColor: 'var(--bg-elev)' }}>
                   {modalTabs.map((tab) => {
                     const isSelected = activeTab === tab.value;
+                    const selectedClass = tab.value === 'all'
+                      ? 'bg-accent text-white font-semibold'
+                      : `tag-${tab.value} ring-1 ring-current/35 font-semibold`;
+
                     return (
                       <button
                         key={tab.value}
                         onClick={() => setActiveTab(tab.value)}
                         className={`
-                          px-3 py-1 rounded-pill text-xs font-mono transition-smooth select-none
-                          ${isSelected ? 'bg-accent text-white font-semibold' : 'tag-default hover:bg-line-strong'}
+                          px-3 py-1.5 rounded-pill text-xs font-mono transition-smooth select-none flex items-center gap-1.5
+                          ${isSelected ? selectedClass : 'tag-default opacity-80 hover:opacity-100 hover:bg-line-strong'}
                         `}
                       >
-                        {tab.label}
+                        <TagIcon 
+                          tag={tab.value} 
+                          size={14} 
+                          color={isSelected && tab.value === 'all' ? 'white' : undefined} 
+                        />
+                        <span>{tab.label}</span>
                       </button>
                     );
                   })}
@@ -272,8 +291,9 @@ export function LogDetailModal({ isOpen, onClose, date }: LogDetailModalProps) {
                             }}
                           >
                             <div className="flex items-center gap-2 mb-2">
-                              <span className={`px-2 py-0.5 rounded-pill text-[10px] font-mono ${tagClass}`}>
-                                {getTagLabel(log.tags?.[0] || '')}
+                              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pill text-[10px] font-mono ${tagClass}`}>
+                                <TagIcon tag={log.tags?.[0] || ''} size={12} className="text-current opacity-95" />
+                                <span>{getTagLabel(log.tags?.[0] || '')}</span>
                               </span>
                               {log.created_at && (
                                 <span className="text-[10px] font-mono flex items-center gap-1" style={{ color: 'var(--fg-faint)' }}>
@@ -295,10 +315,24 @@ export function LogDetailModal({ isOpen, onClose, date }: LogDetailModalProps) {
                 {/* Right Panel: AI Summary */}
                 <div className="flex-1 overflow-y-auto p-5 flex flex-col justify-between">
                   <div className="flex-1 min-h-0">
-                    <h3 className="text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-1.5" style={{ color: 'var(--fg-faint)' }}>
-                      <Sparkles size={13} className="text-accent-amber" />
-                      AI Summary
-                    </h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--fg-faint)' }}>
+                        <Sparkles size={13} className="text-accent-amber" />
+                        AI Summary
+                      </h3>
+                      {summary && (
+                        <Button
+                          onClick={handleCopy}
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1.5 px-2.5 py-1 h-7 text-[10px] uppercase font-mono tracking-wider flex items-center"
+                          style={{ backgroundColor: 'var(--bg-elev)', color: 'var(--fg)' }}
+                        >
+                          {copied ? <Check size={11} className="text-success" /> : <Copy size={11} />}
+                          <span>{copied ? 'Copied ✓' : 'Copy'}</span>
+                        </Button>
+                      )}
+                    </div>
 
                     {summaryLoading ? (
                       <div className="space-y-3">
@@ -318,9 +352,7 @@ export function LogDetailModal({ isOpen, onClose, date }: LogDetailModalProps) {
                             AI formatting was unavailable for this day
                           </div>
                         )}
-                        <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans select-text" style={{ color: 'var(--fg-dim)' }}>
-                          {summary.generated_summary}
-                        </div>
+                        <FormattedSummary text={summary.generated_summary} />
                       </div>
                     ) : isTodaySelected && isBeforeOneAM ? (
                       <div className="text-center py-12 text-sm font-medium" style={{ color: 'var(--fg-faint)' }}>
@@ -333,19 +365,7 @@ export function LogDetailModal({ isOpen, onClose, date }: LogDetailModalProps) {
                     )}
                   </div>
 
-                  {summary && (
-                    <div className="pt-4 border-t mt-4" style={{ borderColor: 'var(--line)' }}>
-                      <Button
-                        onClick={handleCopy}
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-center gap-1.5 text-xs h-10"
-                      >
-                        {copied ? <Check size={14} /> : <Copy size={14} />}
-                        {copied ? 'Copied to clipboard ✓' : 'Copy Summary'}
-                      </Button>
-                    </div>
-                  )}
+
                 </div>
               </div>
             </motion.div>

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, isToday, isWeekend, subMonths, addMonths } from 'date-fns';
 import { useLogs } from '../../hooks/useLogs';
+import { TagIcon } from '../ui/TagIcon';
 
 interface CalendarViewProps {
   onDateSelect: (date: string) => void;
@@ -131,10 +132,17 @@ export function CalendarView({ onDateSelect, selectedDate, tagFilter, summaries 
             ? (tagFilter ? (logInfo?.tags?.includes(tagFilter) ? [tagFilter] : []) : (logInfo?.tags || []))
             : [];
 
+          // Gather log summaries for cell hover tooltip
+          const dayLogs = data?.logs?.filter((log: any) => log.log_date.split('T')[0] === dateKey) || [];
+          const tooltipText = dayLogs.length > 0
+            ? `${format(day, 'MMMM d, yyyy')}\n\n` + dayLogs.map((log: any) => `• [${log.tags?.[0]?.toUpperCase() || 'LOG'}] ${log.content}`).join('\n')
+            : format(day, 'MMMM d, yyyy');
+
           return (
             <button
               key={dateKey}
               onClick={() => onDateSelect(dateKey)}
+              title={tooltipText}
               className={`
                 aspect-square rounded-lg flex flex-col items-center justify-between py-1.5 text-sm transition-smooth relative
                 ${isSelected ? 'ring-2 ring-accent' : ''}
@@ -158,23 +166,16 @@ export function CalendarView({ onDateSelect, selectedDate, tagFilter, summaries 
 
               <span className="font-mono text-xs mt-0.5">{format(day, 'd')}</span>
 
-              {/* Tag Dots */}
-              <div className="h-3.5 flex items-center justify-center gap-0.5 mt-auto">
+              {/* Tag Icons */}
+              <div className="h-4 flex items-center justify-center gap-1 mt-auto">
                 {visibleTags.slice(0, 3).map((tagVal) => (
-                  <span
-                    key={tagVal}
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: getTagColor(tagVal) }}
-                  />
+                  <TagIcon key={tagVal} tag={tagVal} size={12} />
                 ))}
-                {visibleTags.length > 4 ? (
-                  <span className="text-[9px] font-bold leading-none mb-0.5" style={{ color: 'var(--fg-faint)' }}>+</span>
-                ) : visibleTags.length === 4 ? (
-                  <span
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: getTagColor(visibleTags[3]) }}
-                  />
-                ) : null}
+                {visibleTags.length > 3 && (
+                  <span className="text-[9px] font-bold leading-none mb-0.5 opacity-70" style={{ color: 'var(--fg-faint)' }}>
+                    +{visibleTags.length - 3}
+                  </span>
+                )}
               </div>
             </button>
           );

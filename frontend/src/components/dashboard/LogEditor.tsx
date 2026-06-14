@@ -9,6 +9,7 @@ import { getCharCountDisplay, getTodayForTimezone, formatTime, getLocalDateTime 
 import { useAuthStore } from '../../store/authStore';
 import api from '../../services/api';
 import type { Log } from '../../types';
+import { TagIcon } from '../ui/TagIcon';
 
 export function LogEditor() {
   const user = useAuthStore((s) => s.user);
@@ -157,11 +158,12 @@ export function LogEditor() {
                     if (!isSelected) setValidationError('');
                   }}
                   className={`
-                    px-3 py-1.5 rounded-pill text-xs font-mono transition-smooth select-none
+                    px-3 py-1.5 rounded-pill text-xs font-mono transition-smooth select-none flex items-center gap-1.5
                     ${isSelected ? `${tag.className} ring-1 ring-current/30 font-semibold scale-102` : 'tag-default opacity-60 hover:opacity-100'}
                   `}
                 >
-                  {tag.label}
+                  <TagIcon tag={tag.value} size={14} className={isSelected ? 'text-current' : 'opacity-85'} />
+                  <span>{tag.label}</span>
                 </button>
               );
             })}

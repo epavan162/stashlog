@@ -4,11 +4,11 @@ export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 export const MAX_LOG_LENGTH = 10000;
 
 export const TAG_OPTIONS: { value: string; label: string; className: string }[] = [
-  { value: 'bug', label: '🐛 Bug', className: 'tag-bug' },
-  { value: 'feature', label: '✨ Feature', className: 'tag-feature' },
-  { value: 'review', label: '👀 Review', className: 'tag-review' },
-  { value: 'blocked', label: '🚫 Blocked', className: 'tag-blocked' },
-  { value: 'learning', label: '📚 Learning', className: 'tag-learning' },
+  { value: 'bug', label: 'Bug', className: 'tag-bug' },
+  { value: 'feature', label: 'Feature', className: 'tag-feature' },
+  { value: 'review', label: 'Review', className: 'tag-review' },
+  { value: 'blocked', label: 'Blocked', className: 'tag-blocked' },
+  { value: 'learning', label: 'Learning', className: 'tag-learning' },
 ];
 
 export const TIMEZONE_OPTIONS = [

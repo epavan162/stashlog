@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, PenLine, Sparkles, Mail, Calendar, Flame, Bell, Clock, Send, Zap } from 'lucide-react';
+import { ArrowRight, PenLine, Sparkles, Mail, Calendar, Flame, Bell, Clock, Send, Zap, Terminal } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { useAuthStore } from '../store/authStore';
@@ -263,29 +263,96 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 border-t" style={{ borderColor: 'var(--line)' }}>
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-accent to-accent-amber flex items-center justify-center">
-              <span className="text-white font-mono font-bold text-[10px]">S</span>
+      <footer className="relative border-t py-20 px-6 overflow-hidden" style={{ borderColor: 'var(--line)', backgroundColor: 'var(--bg)' }}>
+        {/* Futuristic Grid Lines Background Overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+        
+        {/* Soft Radial Ambient Lights */}
+        <div className="absolute top-0 left-1/4 -translate-y-1/2 w-80 h-80 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 translate-y-1/2 w-80 h-80 bg-accent-purple/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-5xl mx-auto relative z-10 flex flex-col items-center space-y-12">
+          
+          {/* Centered Showcase Card: Glass Dock */}
+          <div className="w-full max-w-3xl rounded-2xl border p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden group hover:border-accent/30 transition-all duration-500"
+            style={{ 
+              borderColor: 'var(--line-strong)', 
+              backgroundColor: 'var(--bg-elev)',
+            }}
+          >
+            {/* Glowing border outline effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-accent/0 via-accent/10 to-accent-amber/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+            {/* Left: Brand Identity & Status */}
+            <div className="flex flex-col items-center md:items-start text-center md:text-left space-y-3 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent-amber flex items-center justify-center shadow-lg shadow-accent/15">
+                  <span className="text-white font-mono font-bold text-xs">S</span>
+                </div>
+                <span className="font-mono text-base font-bold tracking-tight" style={{ color: 'var(--fg)' }}>Stashlog</span>
+              </div>
+              <p className="text-xs max-w-xs leading-relaxed" style={{ color: 'var(--fg-dim)' }}>
+                Write code. Build consistency. Let Gemini handle your morning standup amnesia.
+              </p>
             </div>
-            <span className="font-mono text-sm" style={{ color: 'var(--fg-dim)' }}>Stashlog</span>
-          </div>
-          <div className="flex items-center gap-6 text-sm" style={{ color: 'var(--fg-faint)' }}>
-            <a href="/login" className="hover:text-fg transition-smooth">Sign In</a>
-            <a href="/register" className="hover:text-fg transition-smooth">Get Started</a>
-          </div>
-          <p className="text-xs" style={{ color: 'var(--fg-faint)' }}>
-            Open source. Free forever. Built by{' '}
+
+            {/* Right: Portfolio Showcase (High Focus) */}
             <a
               href="https://edagottu-pavan-kalyan-portfolio.netlify.app/"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-accent transition-smooth font-medium"
+              className="relative z-10 flex items-center gap-3 px-5 py-3 rounded-xl border bg-[var(--bg-card)] hover:border-accent transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer shrink-0"
+              style={{ borderColor: 'var(--line)' }}
             >
-              Pavan Kalyan Edagottu
-            </a>.
-          </p>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-accent to-accent-pink flex items-center justify-center shadow-sm">
+                <Terminal size={14} className="text-white" />
+              </div>
+              <div className="text-left">
+                <div className="text-[9px] uppercase tracking-widest font-extrabold" style={{ color: 'var(--fg-faint)' }}>Designed & Engineered By</div>
+                <div className="text-sm font-extrabold text-accent hover:text-accent-amber transition-smooth">
+                  Pavan Kalyan Edagottu <span className="inline-block transition-transform duration-300 hover:translate-x-1">→</span>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          {/* Quick Nav & Details Row */}
+          <div className="w-full flex flex-col md:flex-row items-center justify-between gap-8 pt-8 border-t text-sm font-medium" style={{ borderColor: 'var(--line)', color: 'var(--fg-faint)' }}>
+            
+            {/* Left/Top links */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
+              <a href="#how-it-works" onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+              }} className="hover:text-accent transition-smooth">
+                How It Works
+              </a>
+              <a href="/login" className="hover:text-accent transition-smooth">
+                Sign In
+              </a>
+              <a href="/register" className="hover:text-accent transition-smooth">
+                Create Account
+              </a>
+              <a 
+                href="https://github.com/epavan162/stashlog" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="hover:text-accent transition-smooth"
+              >
+                Source Code
+              </a>
+            </div>
+
+            {/* Right/Bottom metadata */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full border bg-[var(--bg-elev)] border-[var(--line-strong)] font-mono text-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse-dot" />
+                <span style={{ color: 'var(--fg-dim)' }}>All Systems Operational</span>
+              </div>
+              <p>© {new Date().getFullYear()} Stashlog. Open-source under MIT License.</p>
+            </div>
+          </div>
+
         </div>
       </footer>
 

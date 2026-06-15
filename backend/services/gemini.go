@@ -95,7 +95,7 @@ func (s *GeminiService) GenerateWeeklySummary(summaries string) (string, bool) {
 }
 
 func (s *GeminiService) callGemini(prompt string) (string, error) {
-	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=%s", s.cfg.GeminiAPIKey)
+	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", s.cfg.GeminiModel, s.cfg.GeminiAPIKey)
 
 	reqBody := geminiRequest{
 		Contents: []geminiContent{

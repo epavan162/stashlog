@@ -14,6 +14,7 @@ type Config struct {
 	GoogleClientID   string
 	GoogleClientSecret string
 	GeminiAPIKey     string
+	GeminiModel      string
 	BrevoAPIKey      string
 	BrevoSenderEmail string
 	BrevoSenderName  string
@@ -32,6 +33,7 @@ func Load() *Config {
 		GoogleClientID:   getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
 		GeminiAPIKey:     getEnv("GEMINI_API_KEY", ""),
+		GeminiModel:      getEnv("GEMINI_MODEL", "gemini-2.5-flash"),
 		BrevoAPIKey:      getEnv("BREVO_API_KEY", ""),
 		BrevoSenderEmail: getEnv("BREVO_SENDER_EMAIL", ""),
 		BrevoSenderName:  getEnv("BREVO_SENDER_NAME", "Stashlog"),

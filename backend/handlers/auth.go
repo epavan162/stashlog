@@ -48,12 +48,11 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		}
 	}
 
-	// Check if user exists (prevent email enumeration — same response)
+	// Check if user exists
 	var existingUser models.User
 	result := db.DB.Where("email = ?", strings.ToLower(req.Email)).First(&existingUser)
 	if result.Error == nil {
-		// User exists but return same message
-		c.JSON(http.StatusOK, gin.H{"message": "If this email is not registered, a verification email has been sent."})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already registered"})
 		return
 	}
 
@@ -170,9 +169,15 @@ func (h *AuthHandler) GoogleAuth(c *gin.Context) {
 		err = db.DB.Where("email = ? AND deleted_at IS NULL", strings.ToLower(googleUser.Email)).First(&user).Error
 		if err == nil {
 			// Link Google to existing email account
+			wasVerified := user.EmailVerified
 			user.GoogleID = googleUser.Sub
 			user.AuthProvider = models.AuthProviderBoth
+			user.EmailVerified = true
 			db.DB.Save(&user)
+
+			if !wasVerified {
+				go h.emailService.SendWelcomeEmail(user.Email, user.Name)
+			}
 		} else {
 			// New user
 			user = models.User{

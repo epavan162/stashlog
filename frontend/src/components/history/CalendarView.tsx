@@ -206,7 +206,7 @@ export function CalendarView({ onDateSelect, selectedDate, tagFilter, summaries,
               onClick={() => onDateSelect(dateKey)}
               title={tooltipText}
               className={`
-                aspect-square rounded-lg flex flex-col items-center justify-between py-1.5 text-sm transition-smooth relative
+                aspect-square rounded-lg flex flex-col items-center justify-between pt-1 pb-1 sm:py-1.5 text-sm transition-smooth relative
                 ${isSelected ? 'ring-2 ring-accent' : ''}
                 ${isTodayDay ? 'ring-2 ring-accent/55' : ''}
                 ${isHighlighted || isMissed ? 'hover:brightness-110' : 'hover:bg-bg-elev'}
@@ -235,15 +235,14 @@ export function CalendarView({ onDateSelect, selectedDate, tagFilter, summaries,
               <span className="font-mono text-xs mt-0.5">{format(day, 'd')}</span>
 
               {/* Tag Icons */}
-              <div className="h-4 flex items-center justify-center gap-1 mt-auto">
-                {visibleTags.slice(0, 3).map((tagVal) => (
-                  <TagIcon key={tagVal} tag={tagVal} size={12} />
+              <div className="h-3 sm:h-4 flex items-center justify-center gap-[1px] sm:gap-[3px] mt-auto w-full px-0.5 pb-0.5">
+                {visibleTags.map((tagVal) => (
+                  <TagIcon
+                    key={tagVal}
+                    tag={tagVal}
+                    className="w-[7px] h-[7px] sm:w-[11px] sm:h-[11px] flex-shrink-0"
+                  />
                 ))}
-                {visibleTags.length > 3 && (
-                  <span className="text-[9px] font-bold leading-none mb-0.5 opacity-70" style={{ color: 'var(--fg-faint)' }}>
-                    +{visibleTags.length - 3}
-                  </span>
-                )}
               </div>
             </button>
           );

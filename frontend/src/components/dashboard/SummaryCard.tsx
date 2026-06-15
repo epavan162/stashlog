@@ -114,15 +114,21 @@ export function SummaryCard() {
           </div>
         </div>
 
-        {summary.is_fallback && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
-            style={{ backgroundColor: 'rgba(245,158,11,0.08)', color: 'var(--warning)' }}>
-            <AlertTriangle size={14} />
-            AI formatting was unavailable. Here are your raw logs:
+        {summary.is_fallback ? (
+          <div className="py-6 text-center space-y-2 rounded-xl border border-dashed" style={{ borderColor: 'var(--line)', backgroundColor: 'var(--bg-elev)' }}>
+            <AlertTriangle size={20} className="mx-auto" style={{ color: 'var(--warning)' }} />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>
+                AI Summary Unavailable
+              </p>
+              <p className="text-xs max-w-xs mx-auto px-4" style={{ color: 'var(--fg-dim)' }}>
+                We couldn't generate your standup automatically. Please click "Regenerate" above to format your logs (up to 3 times per day).
+              </p>
+            </div>
           </div>
+        ) : (
+          <FormattedSummary text={summary.generated_summary} />
         )}
-
-        <FormattedSummary text={summary.generated_summary} />
 
         {summary.regeneration_count >= 3 && (
           <p className="text-xs" style={{ color: 'var(--fg-faint)' }}>

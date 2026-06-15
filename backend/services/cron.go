@@ -29,8 +29,8 @@ func NewCronService(cfg *config.Config, geminiService *GeminiService, emailServi
 }
 
 func (s *CronService) Start() {
-	// Run every 30 minutes to check users in different timezones
-	s.cronRunner.AddFunc("0 */30 * * * *", func() {
+	// Run every 5 minutes to check users in different timezones
+	s.cronRunner.AddFunc("0 */5 * * * *", func() {
 		s.processAllUsers()
 	})
 
@@ -55,9 +55,9 @@ func (s *CronService) processAllUsers() {
 	var users []models.User
 	db.DB.Where("deleted_at IS NULL AND email_verified = true").Find(&users)
 
-	for i, user := range users {
-		// Stagger across users (100ms per user)
-		time.Sleep(time.Duration(i*100) * time.Millisecond)
+	for _, user := range users {
+		// Stagger across users (3 seconds to prevent concurrent Gemini API rate limits)
+		time.Sleep(3 * time.Second)
 
 		go s.processUser(user)
 	}
@@ -80,27 +80,27 @@ func (s *CronService) processUser(user models.User) {
 
 	// 1 AM Tue-Sat: Generate daily summary (for Mon-Fri logs)
 	isTueToSat := weekday >= time.Tuesday && weekday <= time.Saturday
-	if isTueToSat && hour == 1 && minute < 30 {
+	if isTueToSat && hour == 1 && minute < 5 {
 		s.generateDailySummary(user)
 	}
 
-	// 2 AM Tue-Sat: Auto-retry fallback summaries (if any exist)
-	if isTueToSat && hour == 2 && minute < 30 {
+	// 2:55 AM Tue-Sat: Auto-retry fallback summaries (if any exist)
+	if isTueToSat && hour == 2 && minute >= 55 {
 		s.retryFallbackSummaries(user)
 	}
 
 	// 8 AM Mon-Fri: Send daily standup email
-	if isWeekday && hour == 8 && minute < 30 {
+	if isWeekday && hour == 8 && minute < 5 {
 		s.sendDailyEmail(user, weekday)
 	}
 
 	// 8 PM Mon-Fri: Send nudge if no log
-	if isWeekday && hour == 20 && minute < 30 {
+	if isWeekday && hour == 20 && minute < 5 {
 		s.sendNudgeEmail(user)
 	}
 
 	// Saturday 10 AM: Generate weekly summary and send weekly digest email
-	if weekday == time.Saturday && hour == 10 && minute < 30 {
+	if weekday == time.Saturday && hour == 10 && minute < 5 {
 		s.generateWeeklySummary(user)
 		s.sendWeeklyDigestEmail(user)
 	}
@@ -159,14 +159,14 @@ func (s *CronService) retryFallbackSummaries(user models.User) {
 		return
 	}
 
-	log.Printf("Found %d fallback summaries to regenerate at 2 AM for user %s", len(fallbackSummaries), user.Email)
+	log.Printf("Found %d fallback summaries to regenerate at 2:55 AM for user %s", len(fallbackSummaries), user.Email)
 
 	for _, summary := range fallbackSummaries {
-		log.Printf("Attempting automated 2 AM fallback regeneration for %s (date: %s)...", user.Email, summary.LogDate.Format("2006-01-02"))
+		log.Printf("Attempting automated 2:55 AM fallback regeneration for %s (date: %s)...", user.Email, summary.LogDate.Format("2006-01-02"))
 
 		generatedSummary, isFallback := s.geminiService.GenerateDailySummary(summary.RawLogs)
 		if isFallback {
-			log.Printf("Automated 2 AM fallback regeneration failed again for %s (date: %s)", user.Email, summary.LogDate.Format("2006-01-02"))
+			log.Printf("Automated 2:55 AM fallback regeneration failed again for %s (date: %s)", user.Email, summary.LogDate.Format("2006-01-02"))
 			continue
 		}
 
@@ -175,9 +175,9 @@ func (s *CronService) retryFallbackSummaries(user models.User) {
 		summary.GeneratedAt = time.Now()
 
 		if err := db.DB.Save(&summary).Error; err != nil {
-			log.Printf("Failed to save regenerated summary at 2 AM for %s: %v", user.Email, err)
+			log.Printf("Failed to save regenerated summary at 2:55 AM for %s: %v", user.Email, err)
 		} else {
-			log.Printf("Successfully regenerated daily summary at 2 AM for %s (date: %s)", user.Email, summary.LogDate.Format("2006-01-02"))
+			log.Printf("Successfully regenerated daily summary at 2:55 AM for %s (date: %s)", user.Email, summary.LogDate.Format("2006-01-02"))
 		}
 	}
 }

@@ -297,7 +297,7 @@ export default function History() {
                 })}
               </div>
 
-              <Card>
+              <Card className="!p-3 sm:!p-6">
                 <CalendarView
                   onDateSelect={handleDateSelect}
                   selectedDate={selectedDate}

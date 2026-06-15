@@ -84,8 +84,8 @@ func (h *SummaryHandler) RegenerateSummary(c *gin.Context) {
 	var summary models.Summary
 	err = db.DB.Where("user_id = ? AND log_date = ? AND summary_type = ?", userID, logDate, models.SummaryTypeDaily).First(&summary).Error
 
-	if err == nil && summary.RegenerationCount >= 1 {
-		c.JSON(http.StatusTooManyRequests, gin.H{"error": "Maximum 1 regeneration per day allowed"})
+	if err == nil && summary.RegenerationCount >= 3 {
+		c.JSON(http.StatusTooManyRequests, gin.H{"error": "Maximum 3 regenerations per day allowed"})
 		return
 	}
 

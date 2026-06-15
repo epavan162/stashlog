@@ -51,10 +51,10 @@ func (s *GeminiService) GenerateDailySummary(rawLogs string) (string, bool) {
 	prompt := fmt.Sprintf(`Create a daily standup update from the user's logs using these rules:
 
 1. Format the response with these exact Markdown headers:
-   - Use "### Yesterday's Standup" for the main update.
+   - Use "### Yesterday's Work" for the main update.
    - Use "### Blockers" if there are any blocker logs.
    - Use "### Today's Plan" if a plan for today is mentioned in the logs.
-2. Under "### Yesterday's Standup", start with "Yesterday, I worked on..." and summarize the main area of work first.
+2. Under "### Yesterday's Work", start with "Yesterday, I worked on..." and summarize the main area of work first.
 3. Use bullet points (using "-") for the updates under each section.
 4. Use very simple English. Do not use complex, professional, or fancy words.
 5. Keep it natural, like a software developer speaking in a daily standup.

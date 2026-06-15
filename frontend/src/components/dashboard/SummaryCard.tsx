@@ -81,11 +81,16 @@ export function SummaryCard() {
   return (
     <Card>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold" style={{ color: 'var(--fg)' }}>
-            Yesterday's Standup
-          </h3>
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--fg)' }}>
+              Today's Standup
+            </h3>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--fg-faint)' }}>
+              Your standup update, generated from yesterday's logs
+            </p>
+          </div>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
             <Button
               variant="ghost"
               size="sm"
@@ -100,7 +105,7 @@ export function SummaryCard() {
               size="sm"
               onClick={() => regenerate.mutate()}
               isLoading={regenerate.isPending}
-              disabled={summary.regeneration_count >= 1}
+              disabled={summary.regeneration_count >= 3}
               className="gap-1.5"
             >
               <RefreshCw size={14} />
@@ -119,9 +124,9 @@ export function SummaryCard() {
 
         <FormattedSummary text={summary.generated_summary} />
 
-        {summary.regeneration_count >= 1 && (
+        {summary.regeneration_count >= 3 && (
           <p className="text-xs" style={{ color: 'var(--fg-faint)' }}>
-            Regeneration limit reached (1 per day)
+            Regeneration limit reached (3 per day)
           </p>
         )}
       </div>

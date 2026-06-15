@@ -81,7 +81,7 @@ export function SummaryCard() {
   return (
     <Card>
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-col gap-3">
           <div>
             <h3 className="text-lg font-semibold" style={{ color: 'var(--fg)' }}>
               Today's Standup
@@ -90,7 +90,7 @@ export function SummaryCard() {
               Your standup update, generated from yesterday's logs
             </p>
           </div>
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"

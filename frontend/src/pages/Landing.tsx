@@ -291,8 +291,8 @@ export default function Landing() {
                 </div>
                 <span className="font-mono text-base font-bold tracking-tight" style={{ color: 'var(--fg)' }}>Stashlog</span>
               </div>
-              <p className="text-xs max-w-xs leading-relaxed" style={{ color: 'var(--fg-dim)' }}>
-                Write code. Build consistency. Let Gemini handle your morning standup amnesia.
+              <p className="text-xs max-w-sm leading-relaxed" style={{ color: 'var(--fg-dim)' }}>
+                Log what you did in 2 minutes. Wake up to an AI-formatted standup summary in your inbox every morning. Never struggle in standup again.
               </p>
             </div>
 

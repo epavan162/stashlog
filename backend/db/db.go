@@ -2,6 +2,7 @@ package db
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	"github.com/stashlog/backend/config"
@@ -19,8 +20,17 @@ func Connect(cfg *config.Config) {
 		Logger: logger.Default.LogMode(logger.Info),
 	}
 
+	dsn := cfg.DatabaseURL
+	if !strings.Contains(dsn, "default_query_exec_mode") {
+		if strings.Contains(dsn, "?") {
+			dsn += "&default_query_exec_mode=simple_protocol"
+		} else {
+			dsn += "?default_query_exec_mode=simple_protocol"
+		}
+	}
+
 	for i := 0; i < 5; i++ {
-		DB, err = gorm.Open(postgres.Open(cfg.DatabaseURL), gormConfig)
+		DB, err = gorm.Open(postgres.Open(dsn), gormConfig)
 		if err == nil {
 			break
 		}

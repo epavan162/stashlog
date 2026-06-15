@@ -363,7 +363,7 @@ export function LogDetailModal({ isOpen, onClose, date, initialTag }: LogDetailM
                             AI formatting was unavailable for this day
                           </div>
                         )}
-                        <FormattedSummary text={summary.generated_summary} />
+                        <FormattedSummary text={summary.generated_summary} date={formattedDate} />
                       </div>
                     ) : isTodaySelected && isBeforeOneAM ? (
                       <div className="text-center py-12 text-sm font-medium" style={{ color: 'var(--fg-faint)' }}>

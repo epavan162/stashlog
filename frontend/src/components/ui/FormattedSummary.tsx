@@ -10,6 +10,7 @@ import { TagIcon } from './TagIcon';
 
 interface FormattedSummaryProps {
   text: string;
+  date?: string;
 }
 
 interface Section {
@@ -18,11 +19,17 @@ interface Section {
 }
 
 // Map headers to premium icons and styles
-const getSectionHeader = (title: string) => {
-  const cleanTitle = title.replace(/^###\s*/, '').trim();
+const getSectionHeader = (title: string, date?: string) => {
+  let cleanTitle = title.replace(/^###\s*/, '').trim();
+  const lowerTitle = cleanTitle.toLowerCase();
+  
+  if (date && (lowerTitle.includes("yesterday's work") || lowerTitle.includes("yesterday's standup") || lowerTitle.includes("yesterday work") || lowerTitle.includes("yesterday standup"))) {
+    cleanTitle = `${date} Work`;
+  }
+  
   const lower = cleanTitle.toLowerCase();
   
-  if (lower.includes('what i did') || lower.includes('work completed') || lower.includes('features built') || lower.includes('bugs fixed') || lower.includes('reviews done')) {
+  if (lower.includes('what i did') || lower.includes('work completed') || lower.includes('features built') || lower.includes('bugs fixed') || lower.includes('reviews done') || lower.includes('work') || lower.includes('standup')) {
     return {
       title: cleanTitle,
       icon: <CheckCircle2 size={15} className="text-emerald-500 flex-shrink-0" />,
@@ -107,7 +114,7 @@ const renderInlineContent = (text: string) => {
   );
 };
 
-export const FormattedSummary: React.FC<FormattedSummaryProps> = ({ text }) => {
+export const FormattedSummary: React.FC<FormattedSummaryProps> = ({ text, date }) => {
   if (!text) return null;
 
   const lines = text.split(/\r?\n/);
@@ -134,7 +141,7 @@ export const FormattedSummary: React.FC<FormattedSummaryProps> = ({ text }) => {
   return (
     <div className="space-y-4 select-text">
       {sections.map((section, sIndex) => {
-        const headerInfo = section.title ? getSectionHeader(section.title) : null;
+        const headerInfo = section.title ? getSectionHeader(section.title, date) : null;
         
         return (
           <div 
@@ -156,9 +163,18 @@ export const FormattedSummary: React.FC<FormattedSummaryProps> = ({ text }) => {
             
             <ul className="space-y-2 list-none pl-0 m-0">
               {section.lines.map((line, lIndex) => {
-                const trimmedLine = line.trim();
-                const isBullet = trimmedLine.startsWith('-') || trimmedLine.startsWith('*');
-                const cleanLine = isBullet ? trimmedLine.substring(1).trim() : trimmedLine;
+                let cleanLine = line.trim();
+                const isBullet = cleanLine.startsWith('-') || cleanLine.startsWith('*');
+                cleanLine = isBullet ? cleanLine.substring(1).trim() : cleanLine;
+                
+                if (date) {
+                  // Replace "Yesterday," or "yesterday," with "On <date>,"
+                  cleanLine = cleanLine.replace(/^[Yy]esterday,\s*/, `On ${date}, `);
+                  // Also replace "Yesterday I worked" with "On <date> I worked"
+                  cleanLine = cleanLine.replace(/^[Yy]esterday\s+I\s+worked/i, `On ${date} I worked`);
+                  // Also replace standalone "Yesterday" at start of line with "On <date>"
+                  cleanLine = cleanLine.replace(/^[Yy]esterday\b/, `On ${date}`);
+                }
                 
                 return (
                   <li key={lIndex} className="flex items-start text-xs leading-relaxed" style={{ color: 'var(--fg-dim)' }}>

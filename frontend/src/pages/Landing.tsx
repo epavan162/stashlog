@@ -276,7 +276,15 @@ export default function Landing() {
             <a href="/register" className="hover:text-fg transition-smooth">Get Started</a>
           </div>
           <p className="text-xs" style={{ color: 'var(--fg-faint)' }}>
-            Open source. Free forever.
+            Open source. Free forever. Built by{' '}
+            <a
+              href="https://edagottu-pavan-kalyan-portfolio.netlify.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-accent transition-smooth font-medium"
+            >
+              Pavan Kalyan Edagottu
+            </a>.
           </p>
         </div>
       </footer>

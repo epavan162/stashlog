@@ -64,7 +64,7 @@ stashlog/
 *   📊 **Weekly Recap Digests**: Generates a weekly recap summary at 11 PM on Fridays and sends a digest email at 8 AM on Saturdays showing days logged ($X/5$) and current streaks.
 *   🔔 **8 PM Nudges**: Sends an email reminder at 8 PM local time on weekdays if you haven't logged any work for the day.
 *   🔥 **Streak Tracker**: Tracks your consecutive logged weekdays (Saturdays and Sundays are automatically skipped to protect streaks over weekends).
-*   ⏰ **Grace Window (Saturday)**: Saturdays before 10 AM local time show a grace window allowing users to retroactively log work for Friday. After 10 AM, the log editor is hidden and replaced by a "Rest up!" weekend dashboard.
+*   🛋️ **Weekend Rest Screen**: On Saturdays and Sundays, the log editor is hidden and replaced by a "Rest up!" weekend dashboard displaying your weekly AI summary and current streak.
 *   📅 **Visual Calendar**: A calendar dashboard in the History page displaying color-coded tag indicator dots (up to 4, then a `+` indicator) and sparkle icons for dates that have AI-generated summaries. Includes a global tag filter.
 *   📱 **Responsive Mobile UI**: Desktop centered dialog modals adapt automatically into full-screen slide sheets on viewports under 768px.
 *   ⚠️ **Email Bounce Warnings**: Detects bounced emails using Brevo logs and renders a prominent warning banner inside the dashboard.

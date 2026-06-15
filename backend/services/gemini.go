@@ -100,7 +100,8 @@ func (s *GeminiService) callGemini(prompt string) (string, error) {
 			return "", err
 		}
 
-		resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonBody))
+		client := &http.Client{Timeout: 15 * time.Second}
+		resp, err := client.Post(url, "application/json", bytes.NewBuffer(jsonBody))
 		if err != nil {
 			lastErr = err
 			continue

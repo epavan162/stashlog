@@ -145,6 +145,25 @@ func (s *CronService) sendDailyEmail(user models.User, weekday time.Weekday) {
 	}
 
 	localTime := getUserLocalTime(user.Timezone)
+	startOfDayLocal := time.Date(localTime.Year(), localTime.Month(), localTime.Day(), 0, 0, 0, 0, localTime.Location())
+	endOfDayLocal := startOfDayLocal.AddDate(0, 0, 1)
+
+	// Check if daily standup email was already successfully sent today
+	var sentCount int64
+	db.DB.Model(&models.EmailLog{}).Where(
+		"user_id = ? AND email_type IN ? AND status = ? AND sent_at >= ? AND sent_at < ?",
+		user.ID,
+		[]models.EmailType{models.EmailTypeDaily, models.EmailTypeMonday},
+		models.EmailStatusSent,
+		startOfDayLocal,
+		endOfDayLocal,
+	).Count(&sentCount)
+
+	if sentCount > 0 {
+		log.Printf("Daily standup email already sent today for %s, skipping", user.Email)
+		return
+	}
+
 	isMonday := weekday == time.Monday
 
 	var summaryDate time.Time
@@ -179,6 +198,24 @@ func (s *CronService) sendNudgeEmail(user models.User) {
 	}
 
 	localTime := getUserLocalTime(user.Timezone)
+	startOfDayLocal := time.Date(localTime.Year(), localTime.Month(), localTime.Day(), 0, 0, 0, 0, localTime.Location())
+	endOfDayLocal := startOfDayLocal.AddDate(0, 0, 1)
+
+	// Check if nudge email was already successfully sent today
+	var sentCount int64
+	db.DB.Model(&models.EmailLog{}).Where(
+		"user_id = ? AND email_type = ? AND status = ? AND sent_at >= ? AND sent_at < ?",
+		user.ID,
+		models.EmailTypeNudge,
+		models.EmailStatusSent,
+		startOfDayLocal,
+		endOfDayLocal,
+	).Count(&sentCount)
+
+	if sentCount > 0 {
+		log.Printf("Nudge email already sent today for %s, skipping", user.Email)
+		return
+	}
 	today := time.Date(localTime.Year(), localTime.Month(), localTime.Day(), 0, 0, 0, 0, localTime.Location())
 	todayUTC := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.UTC)
 
@@ -295,6 +332,24 @@ func (s *CronService) sendWeeklyDigestEmail(user models.User) {
 	}
 
 	localTime := getUserLocalTime(user.Timezone)
+	startOfDayLocal := time.Date(localTime.Year(), localTime.Month(), localTime.Day(), 0, 0, 0, 0, localTime.Location())
+	endOfDayLocal := startOfDayLocal.AddDate(0, 0, 1)
+
+	// Check if weekly digest was already successfully sent today
+	var sentCount int64
+	db.DB.Model(&models.EmailLog{}).Where(
+		"user_id = ? AND email_type = ? AND status = ? AND sent_at >= ? AND sent_at < ?",
+		user.ID,
+		models.EmailTypeWeekly,
+		models.EmailStatusSent,
+		startOfDayLocal,
+		endOfDayLocal,
+	).Count(&sentCount)
+
+	if sentCount > 0 {
+		log.Printf("Weekly digest email already sent today for %s, skipping", user.Email)
+		return
+	}
 	weekday := localTime.Weekday()
 
 	// Get Monday of this week
@@ -334,7 +389,6 @@ func (s *CronService) sendWeeklyDigestEmail(user models.User) {
 	weekDates := fmt.Sprintf("%s to %s", monday.Format("Jan 2"), friday.Format("Jan 2, 2006"))
 
 	s.emailService.SendWeeklyDigestEmail(user.ID, user.Email, user.Name, weekDates, weeklySummary.GeneratedSummary, int(logCount), streak)
-	s.logEmailEvent(user.ID, models.EmailTypeWeekly, models.EmailStatusSent, "")
 }
 
 func (s *CronService) logEmailEvent(userID uuid.UUID, emailType models.EmailType, status models.EmailStatus, errMsg string) {

@@ -66,10 +66,10 @@ export function SummaryCard() {
       <Card>
         <div className="text-center py-8">
           <p className="text-sm mb-2" style={{ color: 'var(--fg-dim)' }}>
-            No summary available for yesterday
+            No logs recorded yesterday
           </p>
           <p className="text-xs" style={{ color: 'var(--fg-faint)' }}>
-            Summaries are generated at 1 AM from your daily logs
+            Add logs throughout the day to automatically generate your standup at 1 AM.
           </p>
         </div>
       </Card>

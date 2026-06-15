@@ -27,6 +27,20 @@ export function Navbar() {
     setIsMobileOpen(false);
   }, [location.pathname]);
 
+  useEffect(() => {
+    if (!isMobileOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const navbarElement = document.querySelector('nav');
+      if (navbarElement && !navbarElement.contains(e.target as Node)) {
+        setIsMobileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMobileOpen]);
+
   const navLinks = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/history', label: 'History', icon: History },
@@ -120,15 +134,6 @@ export function Navbar() {
                           <p className="text-sm font-medium" style={{ color: 'var(--fg)' }}>{user?.name}</p>
                           <p className="text-xs" style={{ color: 'var(--fg-faint)' }}>{user?.email}</p>
                         </div>
-                        <Link
-                          to="/settings"
-                          className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-bg-elev transition-smooth"
-                          style={{ color: 'var(--fg-dim)' }}
-                          onClick={() => setIsProfileOpen(false)}
-                        >
-                          <Settings size={15} />
-                          Settings
-                        </Link>
                         <button
                           onClick={() => {
                             logout.mutate();
@@ -199,17 +204,6 @@ export function Navbar() {
                       {link.label}
                     </Link>
                   ))}
-                  <button
-                    onClick={() => {
-                      logout.mutate();
-                      setIsMobileOpen(false);
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-smooth hover:bg-bg-elev text-left w-full"
-                    style={{ color: 'var(--error)' }}
-                  >
-                    <LogOut size={18} />
-                    Sign Out
-                  </button>
                 </>
               ) : (
                 <>

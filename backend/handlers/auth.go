@@ -73,7 +73,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	if err := db.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create user"})
+		log.Printf("[Register] Error creating user in DB: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Could not create user: %v", err)})
 		return
 	}
 
@@ -183,7 +184,8 @@ func (h *AuthHandler) GoogleAuth(c *gin.Context) {
 				IsPasswordSet: false,
 			}
 			if err := db.DB.Create(&user).Error; err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create user"})
+				log.Printf("[GoogleAuth] Error creating user in DB: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Could not create user: %v", err)})
 				return
 			}
 		}

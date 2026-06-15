@@ -34,8 +34,16 @@ func (s *CronService) Start() {
 		s.processAllUsers()
 	})
 
+	// Run every day at 3:00 AM server time (UTC) to clean up expired sessions
+	s.cronRunner.AddFunc("0 0 3 * * *", func() {
+		s.cleanupExpiredSessions()
+	})
+
 	s.cronRunner.Start()
 	log.Println("Cron service started")
+
+	// Run initial cleanup in a goroutine on startup
+	go s.cleanupExpiredSessions()
 }
 
 func (s *CronService) Stop() {
@@ -454,4 +462,19 @@ func calculateStreak(userID interface{}, timezone string) int {
 	}
 
 	return streak
+}
+
+func (s *CronService) cleanupExpiredSessions() {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Panic in cleanupExpiredSessions: %v", r)
+		}
+	}()
+
+	result := db.DB.Where("expires_at < ?", time.Now()).Delete(&models.Session{})
+	if result.Error != nil {
+		log.Printf("Error cleaning up expired sessions: %v", result.Error)
+	} else if result.RowsAffected > 0 {
+		log.Printf("Cleaned up %d expired sessions from database", result.RowsAffected)
+	}
 }

@@ -26,6 +26,7 @@ export function LogDetailModal({ isOpen, onClose, date, initialTag }: LogDetailM
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [isMobile, setIsMobile] = useState(false);
+  const [viewMode, setViewMode] = useState<'logs' | 'summary'>('logs');
 
   // Resize listener
   useEffect(() => {
@@ -121,6 +122,7 @@ export function LogDetailModal({ isOpen, onClose, date, initialTag }: LogDetailM
       } else {
         setActiveTab('all');
       }
+      setViewMode('logs');
     }
   }, [isOpen, date, initialTag, tagsInDay]);
 
@@ -230,9 +232,8 @@ export function LogDetailModal({ isOpen, onClose, date, initialTag }: LogDetailM
                   <X size={20} />
                 </button>
               </div>
-
-              {/* Sub-tabs for log tags filter */}
-              {logs.length > 0 && modalTabs.length > 1 && (
+              {/* Desktop Only: Sub-tabs for log tags filter */}
+              {!isMobile && logs.length > 0 && modalTabs.length > 1 && (
                 <div className="px-5 py-3 border-b flex flex-wrap gap-1.5" style={{ borderColor: 'var(--line)', backgroundColor: 'var(--bg-elev)' }}>
                   {modalTabs.map((tab) => {
                     const isSelected = activeTab === tab.value;
@@ -261,71 +262,131 @@ export function LogDetailModal({ isOpen, onClose, date, initialTag }: LogDetailM
                 </div>
               )}
 
+              {/* Mobile Only: Tab switcher for Log Entries vs AI Summary */}
+              {isMobile && (
+                <div className="flex border-b text-sm font-medium" style={{ borderColor: 'var(--line)', backgroundColor: 'var(--bg-elev)' }}>
+                  <button
+                    onClick={() => setViewMode('logs')}
+                    className="flex-1 py-3 text-center border-b-2 transition-smooth"
+                    style={{
+                      borderColor: viewMode === 'logs' ? 'var(--accent)' : 'transparent',
+                      color: viewMode === 'logs' ? 'var(--fg)' : 'var(--fg-dim)',
+                      fontWeight: viewMode === 'logs' ? 600 : 500
+                    }}
+                  >
+                    Log Entries
+                  </button>
+                  <button
+                    onClick={() => setViewMode('summary')}
+                    className="flex-1 py-3 text-center border-b-2 transition-smooth"
+                    style={{
+                      borderColor: viewMode === 'summary' ? 'var(--accent)' : 'transparent',
+                      color: viewMode === 'summary' ? 'var(--fg)' : 'var(--fg-dim)',
+                      fontWeight: viewMode === 'summary' ? 600 : 500
+                    }}
+                  >
+                    AI Summary
+                  </button>
+                </div>
+              )}
+
               {/* Panels split */}
               <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
                 {/* Left Panel: Log Entries */}
-                <div className="flex-1 overflow-y-auto p-5 border-b md:border-b-0 md:border-r" style={{ borderColor: 'var(--line)' }}>
-                  <h3 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--fg-faint)' }}>
-                    Log Entries
-                  </h3>
+                {(!isMobile || viewMode === 'logs') && (
+                  <div className="flex-1 overflow-y-auto p-5 md:border-r" style={{ borderColor: 'var(--line)' }}>
+                    {/* Mobile Only: Inline tags filter in Logs view */}
+                    {isMobile && logs.length > 0 && modalTabs.length > 1 && (
+                      <div className="mb-4 flex flex-wrap gap-1.5 pb-3 border-b" style={{ borderColor: 'var(--line)' }}>
+                        {modalTabs.map((tab) => {
+                          const isSelected = activeTab === tab.value;
+                          const selectedClass = tab.value === 'all'
+                            ? 'bg-accent text-white font-semibold'
+                            : `tag-${tab.value} ring-1 ring-current/35 font-semibold`;
 
-                  {logsLoading ? (
-                    <div className="space-y-4">
-                      <Skeleton className="h-20 w-full" />
-                      <Skeleton className="h-20 w-full" />
-                    </div>
-                  ) : logs.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Inbox size={32} className="mx-auto mb-2 opacity-30" />
-                      <p className="text-sm font-medium" style={{ color: 'var(--fg-faint)' }}>
-                        No logs recorded for this day
-                      </p>
-                    </div>
-                  ) : filteredLogs.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Inbox size={32} className="mx-auto mb-2 opacity-30" />
-                      <p className="text-sm font-medium" style={{ color: 'var(--fg-faint)' }}>
-                        No {activeTab} entries for this day
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {filteredLogs.map((log: any) => {
-                        const tagClass = getTagClassName(log.tags?.[0] || '');
-                        return (
-                          <div
-                            key={log.id}
-                            className="p-4 rounded-card border"
-                            style={{
-                              backgroundColor: 'var(--bg-elev)',
-                              borderColor: 'var(--line)',
-                            }}
-                          >
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pill text-[10px] font-mono ${tagClass}`}>
-                                <TagIcon tag={log.tags?.[0] || ''} size={12} className="text-current opacity-95" />
-                                <span>{getTagLabel(log.tags?.[0] || '')}</span>
-                              </span>
-                              {log.created_at && (
-                                <span className="text-[10px] font-mono flex items-center gap-1" style={{ color: 'var(--fg-faint)' }}>
-                                  <Clock size={10} />
-                                  Saved at {format(new Date(log.created_at), 'h:mm a')}
+                          return (
+                            <button
+                              key={tab.value}
+                              onClick={() => setActiveTab(tab.value)}
+                              className={`
+                                px-2.5 py-1 rounded-pill text-[10px] font-mono transition-smooth select-none flex items-center gap-1
+                                ${isSelected ? selectedClass : 'tag-default opacity-85 hover:opacity-100 hover:bg-line-strong'}
+                              `}
+                            >
+                              <TagIcon 
+                                tag={tab.value} 
+                                size={11} 
+                                color={isSelected && tab.value === 'all' ? 'white' : undefined} 
+                              />
+                              <span>{tab.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--fg-faint)' }}>
+                      Log Entries
+                    </h3>
+
+                    {logsLoading ? (
+                      <div className="space-y-4">
+                        <Skeleton className="h-20 w-full" />
+                        <Skeleton className="h-20 w-full" />
+                      </div>
+                    ) : logs.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Inbox size={32} className="mx-auto mb-2 opacity-30" />
+                        <p className="text-sm font-medium" style={{ color: 'var(--fg-faint)' }}>
+                          No logs recorded for this day
+                        </p>
+                      </div>
+                    ) : filteredLogs.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Inbox size={32} className="mx-auto mb-2 opacity-30" />
+                        <p className="text-sm font-medium" style={{ color: 'var(--fg-faint)' }}>
+                          No {activeTab} entries for this day
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {filteredLogs.map((log: any) => {
+                          const tagClass = getTagClassName(log.tags?.[0] || '');
+                          return (
+                            <div
+                              key={log.id}
+                              className="p-4 rounded-card border"
+                              style={{
+                                backgroundColor: 'var(--bg-elev)',
+                                borderColor: 'var(--line)',
+                              }}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pill text-[10px] font-mono ${tagClass}`}>
+                                  <TagIcon tag={log.tags?.[0] || ''} size={12} className="text-current opacity-95" />
+                                  <span>{getTagLabel(log.tags?.[0] || '')}</span>
                                 </span>
-                              )}
+                                {log.created_at && (
+                                  <span className="text-[10px] font-mono flex items-center gap-1" style={{ color: 'var(--fg-faint)' }}>
+                                    <Clock size={10} />
+                                    Saved at {format(new Date(log.created_at), 'h:mm a')}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ color: 'var(--fg)' }}>
+                                {log.content}
+                              </p>
                             </div>
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ color: 'var(--fg)' }}>
-                              {log.content}
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Right Panel: AI Summary */}
-                <div className="flex-1 overflow-y-auto p-5 flex flex-col justify-between">
-                  <div className="flex-1 min-h-0">
+                {(!isMobile || viewMode === 'summary') && (
+                  <div className="flex-1 overflow-y-auto p-5">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--fg-faint)' }}>
                         <Sparkles size={13} className="text-accent-amber" />
@@ -375,9 +436,7 @@ export function LogDetailModal({ isOpen, onClose, date, initialTag }: LogDetailM
                       </div>
                     )}
                   </div>
-
-
-                </div>
+                )}
               </div>
             </motion.div>
           </div>

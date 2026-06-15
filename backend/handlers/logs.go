@@ -142,7 +142,7 @@ func (h *LogHandler) UpdateLog(c *gin.Context) {
 		return
 	}
 
-	// Check if summary has been generated (locked after 1 AM)
+	// Check if summary has been generated (locked after 12 AM)
 	var summary models.Summary
 	summaryExists := db.DB.Where("user_id = ? AND log_date = ? AND summary_type = ?", userID, logEntry.LogDate, models.SummaryTypeDaily).First(&summary).Error == nil
 

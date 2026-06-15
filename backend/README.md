@@ -44,7 +44,7 @@ MOCK_MODE=false
 
 ## 🗓️ Cron Scheduler Logic
 The cron system checks timezone offsets for all verified users every 30 minutes, running the following tasks exactly at the user's local times:
-*   **1 AM (Daily Summary)**: Tuesday–Saturday generates daily summaries for Monday–Friday logs. Skips if no logs.
+*   **12 AM (Daily Summary)**: Tuesday–Saturday generates daily summaries for Monday–Friday logs. Skips if no logs.
 *   **8 AM (Daily Standup Email)**: Monday sends Friday's summary (with *"last Friday"* subject). Tuesday–Friday sends yesterday's summary. Skips if no summary.
 *   **8 PM (Nudge Email)**: Reminds users on weekdays if they have not logged any work for today.
 *   **Saturday 10 AM (Weekly Summary & Digest)**: Synthesizes weekly logs/summaries (requires user to be registered $\ge$ 3 days) and delivers the weekly digest email containing the summary, days logged ($X/5$), and streak counts.

@@ -406,14 +406,14 @@ export function LogDetailModal({ isOpen, onClose, date, initialTag }: LogDetailM
                       )}
                     </div>
 
-                    {summaryLoading ? (
+                    {logsLoading || (logs.length > 0 && summaryLoading) ? (
                       <div className="space-y-3">
                         <Skeleton className="h-4 w-full" />
                         <Skeleton className="h-4 w-5/6" />
                         <Skeleton className="h-4 w-4/5" />
                       </div>
                     ) : logs.length === 0 ? (
-                      <div className="text-center py-12 text-sm" style={{ color: 'var(--fg-faint)' }}>
+                      <div className="text-center py-12 text-sm font-medium" style={{ color: 'var(--fg-faint)' }}>
                         No summary available — no logs were recorded
                       </div>
                     ) : summary ? (
@@ -434,9 +434,17 @@ export function LogDetailModal({ isOpen, onClose, date, initialTag }: LogDetailM
                           <FormattedSummary text={summary.generated_summary} date={formattedDate} />
                         )}
                       </div>
-                    ) : isTodaySelected && isBeforeOneAM ? (
-                      <div className="text-center py-12 text-sm font-medium" style={{ color: 'var(--fg-faint)' }}>
-                        Summary will be generated after 1 AM tonight
+                    ) : isTodaySelected ? (
+                      <div className="py-8 text-center space-y-2 rounded-xl border border-dashed" style={{ borderColor: 'var(--line)', backgroundColor: 'var(--bg-elev)' }}>
+                        <Sparkles size={24} className="mx-auto text-accent animate-pulse-dot" />
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>
+                            AI Summary Pending
+                          </p>
+                          <p className="text-xs max-w-xs mx-auto px-4" style={{ color: 'var(--fg-dim)' }}>
+                            AI will generate this from your logs at 12:00 AM everyday.
+                          </p>
+                        </div>
                       </div>
                     ) : (
                       <div className="text-center py-12 text-sm font-medium" style={{ color: 'var(--fg-faint)' }}>

@@ -59,7 +59,7 @@ stashlog/
 ## 🌟 Key Features
 
 *   📝 **Daily Logging**: Log your work items with specific tags (`Bug`, `Feature`, `Review`, `Blocked`, `Learning`). Only one tag is active per entry.
-*   🤖 **Gemini AI Summaries**: Automatically fetches the daily log entries at 1 AM in your local timezone, merges them with tag context, and compiles them into a standard standup format: *What I Did*, *Blockers*, and *Plan for Tomorrow*. Includes a 3-attempt exponential backoff retry and raw log fallbacks.
+*   🤖 **Gemini AI Summaries**: Automatically fetches the daily log entries at 12 AM in your local timezone, merges them with tag context, and compiles them into a standard standup format: *What I Did*, *Blockers*, and *Plan for Tomorrow*. Includes a 3-attempt exponential backoff retry and raw log fallbacks.
 *   📧 **Morning Standup Emails**: Delivers the AI-generated daily standup summary directly to your inbox at 8 AM local time (Tuesday–Friday receives *"yesterday's"* logs, and Monday receives *"last Friday's"* logs).
 *   📊 **Weekly Recap Digests**: Generates a weekly recap summary at 11 PM on Fridays and sends a digest email at 8 AM on Saturdays showing days logged ($X/5$) and current streaks.
 *   🔔 **8 PM Nudges**: Sends an email reminder at 8 PM local time on weekdays if you haven't logged any work for the day.

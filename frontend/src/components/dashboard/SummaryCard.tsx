@@ -18,7 +18,7 @@ export function SummaryCard() {
 
   const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
   const hour = new Date().getHours();
-  const isBeforeOneAM = hour < 1;
+  const isBeforeTwelveAM = hour < 0;
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['summary', yesterday],
@@ -49,12 +49,12 @@ export function SummaryCard() {
 
   if (isLoading) return <SummaryCardSkeleton />;
 
-  if (isBeforeOneAM) {
+  if (isBeforeTwelveAM) {
     return (
       <Card>
         <div className="text-center py-8">
           <p className="text-sm font-medium" style={{ color: 'var(--fg-dim)' }}>
-            Your summary will be ready after 1 AM tonight
+            Your summary will be ready after 12 AM tonight
           </p>
         </div>
       </Card>
@@ -69,7 +69,7 @@ export function SummaryCard() {
             No logs recorded yesterday
           </p>
           <p className="text-xs" style={{ color: 'var(--fg-faint)' }}>
-            Add logs throughout the day to automatically generate your standup at 1 AM.
+            Add logs throughout the day to automatically generate your standup at 12 AM.
           </p>
         </div>
       </Card>

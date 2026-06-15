@@ -85,7 +85,7 @@ func (s *EmailService) SendWelcomeEmail(email, name string) {
 			<h3 style="font-size: 17px; color: #1a1814; margin-top: 24px; margin-bottom: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px;">📬 Timezone-Aware Automated Schedules</h3>
 			<p style="font-size: 14.5px; color: #555; line-height: 1.6; margin: 0 0 16px 0;">All schedules are automatically calculated using your preferred local timezone (configured in Settings):</p>
 			<ul style="padding-left: 20px; font-size: 14.5px; color: #555; line-height: 1.7; margin: 0 0 24px 0;">
-				<li><strong>1 AM (AI Summarization)</strong>: Every night, the AI aggregates all your logs from the day into a ready-to-paste standup digest.</li>
+				<li><strong>12 AM (AI Summarization)</strong>: Every night, the AI aggregates all your logs from the day into a ready-to-paste standup digest.</li>
 				<li><strong>8 AM (Daily Standup Email)</strong>: Sent directly to your inbox every weekday morning. On <strong>Monday</strong> morning, you will receive the standup summary of what you logged on <strong>Friday</strong>. From <strong>Tuesday to Friday</strong>, you will receive the standup update of what you logged the <strong>previous day</strong>.</li>
 				<li><strong>8 PM (Smart Nudges)</strong>: If you haven't logged any work for today yet, a nudge reminder is emailed to you so you never lose your streak.</li>
 				<li><strong>Saturday 10 AM (Weekly Digest)</strong>: Re-cap your week with a weekly summary, streak tracker, and days logged digest.</li>
@@ -93,7 +93,7 @@ func (s *EmailService) SendWelcomeEmail(email, name string) {
 
 			<h3 style="font-size: 17px; color: #1a1814; margin-top: 24px; margin-bottom: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px;">🛋️ Weekend Rest Policy & Deadlines</h3>
 			<ul style="padding-left: 20px; font-size: 14.5px; color: #555; line-height: 1.7; margin: 0 0 24px 0;">
-				<li><strong>Daily Submission Deadline</strong>: On regular weekdays (Monday to Friday), you must submit your logs before midnight (12:00 AM) in your local timezone, after which the day closes and the AI generates your standup summary at 1:00 AM.</li>
+				<li><strong>Daily Submission Deadline</strong>: On regular weekdays (Monday to Friday), you must submit your logs before midnight (12:00 AM) in your local timezone, after which the day closes and the AI generates your standup summary at 12:00 AM.</li>
 				<li><strong>No Weekend Logging</strong>: Logging is completely blocked on Saturday and Sunday.</li>
 				<li><strong>Rest Up</strong>: All day Saturday and Sunday, logging is fully locked so you can rest and recharge!</li>
 			</ul>

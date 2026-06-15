@@ -48,7 +48,26 @@ func (s *GeminiService) GenerateDailySummary(rawLogs string) (string, bool) {
 		return s.mockDailySummary(rawLogs), false
 	}
 
-	prompt := fmt.Sprintf(`You are a helpful assistant that formats developer work logs into clean, professional daily standup summaries. Format the following logs into three sections: What I did, Any blockers, Plan for tomorrow (infer if not mentioned). Keep it concise and professional. Logs: %s`, rawLogs)
+	prompt := fmt.Sprintf(`Create a daily standup update from the user's logs using these rules:
+
+1. Format the response with these exact Markdown headers:
+   - Use "### Yesterday's Standup" for the main update.
+   - Use "### Blockers" if there are any blocker logs.
+   - Use "### Today's Plan" if a plan for today is mentioned in the logs.
+2. Under "### Yesterday's Standup", start with "Yesterday, I worked on..." and summarize the main area of work first.
+3. Use bullet points (using "-") for the updates under each section.
+4. Use very simple English. Do not use complex, professional, or fancy words.
+5. Keep it natural, like a software developer speaking in a daily standup.
+6. Put the updates in a logical order and group related work together.
+7. Mention what was implemented, fixed, configured, tested, discussed, or completed, including business impact when useful.
+8. Do not include too many technical details unless they are important. Keep it short.
+9. Write in first person using "I". Use clear, easy-to-speak sentences.
+10. Do not add anything that was not mentioned in the logs. Avoid Jira ticket names and technical jargon where possible.
+11. Combine related tasks into one simple update.
+12. The final output must be suitable for speaking in daily standup meetings or posting to Slack, Teams, and other internal channels.
+
+User's logs:
+%s`, rawLogs)
 
 	result, err := s.callGemini(prompt)
 	if err != nil {

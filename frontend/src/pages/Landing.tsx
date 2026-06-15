@@ -28,7 +28,7 @@ export default function Landing() {
   const features = [
     { icon: PenLine, title: 'Daily Log', desc: 'Log bugs, features, reviews, blockers, and learnings with tags.', color: 'var(--accent)' },
     { icon: Sparkles, title: 'AI Standup', desc: 'Gemini formats your log into a standup summary at 1 AM.', color: 'var(--accent-purple)' },
-    { icon: Mail, title: 'Morning Email', desc: 'Receive at 8 AM. Copy and paste to Slack or standup.', color: 'var(--accent-teal)' },
+    { icon: Mail, title: 'Morning Email', desc: 'Receive at 8 AM. Copy-paste directly to Slack, Teams, or daily standups.', color: 'var(--accent-teal)' },
     { icon: Calendar, title: 'Weekly Digest', desc: 'Saturday 8 AM review of your entire week.', color: 'var(--accent-amber)' },
     { icon: Flame, title: 'Streak Tracking', desc: 'Build consistency with daily logging streaks.', color: 'var(--accent-pink)' },
     { icon: Bell, title: 'Smart Nudge', desc: '8 PM reminder if you forgot to log today.', color: 'var(--accent-emerald)' },
@@ -37,7 +37,7 @@ export default function Landing() {
   const steps = [
     { icon: PenLine, title: 'Log your work', desc: 'Quick textarea with tags. Bug, feature, review, blocked, learning.' },
     { icon: Sparkles, title: 'AI formats it', desc: 'Gemini generates your standup at 1 AM automatically.' },
-    { icon: Send, title: 'Email arrives', desc: '8 AM delivery. Copy-paste into standup. Done.' },
+    { icon: Send, title: 'Email arrives', desc: '8 AM delivery. Perfect for daily standups, Slack, or Teams updates.' },
   ];
 
   return (

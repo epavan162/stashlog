@@ -408,15 +408,25 @@ func (h *AuthHandler) issueTokens(c *gin.Context, user *models.User) {
 }
 
 func (h *AuthHandler) setRefreshCookie(c *gin.Context, token string) {
-	secure := c.Request.TLS != nil
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("refresh_token", token, 7*24*60*60, "/", "", secure, true)
+	isLocal := strings.Contains(c.Request.Host, "localhost") || strings.Contains(c.Request.Host, "127.0.0.1")
+	if isLocal {
+		c.SetSameSite(http.SameSiteLaxMode)
+		c.SetCookie("refresh_token", token, 7*24*60*60, "/", "", false, true)
+	} else {
+		c.SetSameSite(http.SameSiteNoneMode)
+		c.SetCookie("refresh_token", token, 7*24*60*60, "/", "", true, true)
+	}
 }
 
 func (h *AuthHandler) clearRefreshCookie(c *gin.Context) {
-	secure := c.Request.TLS != nil
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("refresh_token", "", -1, "/", "", secure, true)
+	isLocal := strings.Contains(c.Request.Host, "localhost") || strings.Contains(c.Request.Host, "127.0.0.1")
+	if isLocal {
+		c.SetSameSite(http.SameSiteLaxMode)
+		c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+	} else {
+		c.SetSameSite(http.SameSiteNoneMode)
+		c.SetCookie("refresh_token", "", -1, "/", "", true, true)
+	}
 }
 
 type GoogleUserInfo struct {
